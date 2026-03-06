@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Cobweb</title>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Uncial+Antiqua&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg:    #06080a;
+    --fog:   #0d1117;
+    --thread: rgba(180, 190, 200, 0.07);
+    --glow:   rgba(160, 200, 255, 0.12);
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    font-family: 'Special Elite', 'Courier New', monospace;
+    cursor: none;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 80%, rgba(10,20,40,0.8) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 80% at 80% 20%, rgba(5,15,30,0.8) 0%, transparent 70%),
+      radial-gradient(ellipse 100% 100% at 50% 50%, #06080a 0%, #030507 100%);
+    pointer-events: none;
+  }
+
+  #web-canvas {
+    position: fixed; inset: 0; z-index: 1;
+    pointer-events: none;
+  }
+
+  #stage {
+    position: fixed; inset: 0; z-index: 2;
+    pointer-events: none;
+  }
+
+  .msg {
+    position: absolute;
+    max-width: min(420px, 80vw);
+    font-family: 'Special Elite', monospace;
+    line-height: 1.55;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.9s ease, transform 0.9s ease;
+    text-shadow: 0 0 20px currentColor;
+    user-select: none;
+  }
+
+  .msg.visible { opacity: 1; }
+  .msg.fading  { opacity: 0; transition: opacity 1.4s ease, transform 1.4s ease; }
+
+  .msg.size-sm { font-size: clamp(10px, 1.8vw, 13px); }
+  .msg.size-md { font-size: clamp(12px, 2.2vw, 16px); }
+  .msg.size-lg { font-size: clamp(14px, 2.8vw, 20px); }
+  .msg.size-xl { font-size: clamp(18px, 4vw, 28px); letter-spacing: 0.05em; }
+
+  .msg.col-pale   { color: rgba(200, 215, 230, 0.55); }
+  .msg.col-silver { color: rgba(160, 180, 200, 0.45); }
+  .msg.col-cold   { color: rgba(140, 195, 220, 0.50); }
+  .msg.col-ghost  { color: rgba(220, 220, 240, 0.35); }
+  .msg.col-amber  { color: rgba(220, 190, 130, 0.45); }
+  .msg.col-blood  { color: rgba(190,  60,  60, 0.55); }
+  .msg.col-bright { color: rgba(230, 240, 255, 0.80); }
+
+  .msg.important {
+    color: rgba(210, 40, 40, 0.95) !important;
+    text-shadow:
+      0 0 18px rgba(200, 0, 0, 0.7),
+      0 0 40px rgba(160, 0, 0, 0.35);
+    text-align: center;
+    left: 50% !important;
+    max-width: min(600px, 90vw);
+    letter-spacing: 0.06em;
+  }
+
+  #cursor {
+    position: fixed; z-index: 100;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: rgba(180, 200, 255, 0.6);
+    box-shadow: 0 0 12px rgba(180, 200, 255, 0.4);
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+  }
+
+  /* ── Scream overlay ── */
+  #scream-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 28px;
+    background: radial-gradient(ellipse at center,
+      rgba(60,0,0,0.97) 0%, rgba(10,0,0,0.99) 100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1.2s ease;
+  }
+  #scream-overlay.active { opacity: 1; pointer-events: all; }
+
+  #scream-text {
+    font-family: 'Special Elite', monospace;
+    font-size: clamp(22px, 5vw, 52px);
+    color: #fff;
+    text-align: center;
+    max-width: min(760px, 88vw);
+    line-height: 1.4;
+    letter-spacing: 0.04em;
+    text-shadow:
+      0 0 30px rgba(255,60,60,0.9),
+      0 0 80px rgba(200,0,0,0.5),
+      0 0 160px rgba(160,0,0,0.25);
+    opacity: 0;
+    transform: scale(0.94);
+    transition: opacity 1s ease 0.4s, transform 1s ease 0.4s;
+  }
+  #scream-overlay.active #scream-text { opacity: 1; transform: scale(1); }
+
+  #scream-timer {
+    font-family: 'Uncial Antiqua', serif;
+    font-size: 11px;
+    letter-spacing: 0.4em;
+    color: rgba(200,80,80,0.4);
+    text-transform: uppercase;
+    opacity: 0;
+    transition: opacity 0.5s ease 1s;
+  }
+  #scream-overlay.active #scream-timer { opacity: 1; }
+
+  #scream-drain {
+    position: absolute;
+    bottom: 0; left: 0;
+    height: 3px; width: 100%;
+    background: linear-gradient(90deg,
+      rgba(220,0,0,0.9) 0%, rgba(180,0,0,0.6) 100%);
+    transform-origin: left;
+    transform: scaleX(1);
+  }
+
+  /* ── Corner sigil ── */
+  #sigil {
+    position: fixed;
+    bottom: 22px; right: 24px; z-index: 10;
+    font-family: 'Uncial Antiqua', serif;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: rgba(140, 160, 180, 0.2);
+    text-transform: uppercase;
+    pointer-events: none;
+  }
+
+  /* ── Listen button ── */
+  #listen-btn {
+    position: fixed;
+    bottom: 22px; left: 24px; z-index: 10;
+    font-family: 'Uncial Antiqua', serif;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(140, 160, 180, 0.3);
+    background: none;
+    border: none;
+    cursor: none;
+    padding: 6px 0;
+    transition: color 0.6s ease;
+    user-select: none;
+  }
+  #listen-btn:hover {
+    color: rgba(160, 200, 230, 0.65);
+  }
+  #listen-btn.audio-on {
+    color: rgba(160, 200, 230, 0.55);
+    text-shadow: 0 0 10px rgba(140, 190, 255, 0.9),
+               0 0 25px rgba(140, 190, 255, 0.6),
+               0 0 50px rgba(140, 190, 255, 0.3);
+  }
+  #listen-btn.audio-on::before {
+    content: '·';
+    margin-right: 6px;
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 0.3; }
+    50%       { opacity: 1;   }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="web-canvas"></canvas>
+<div id="stage"></div>
+<div id="cursor"></div>
+<div id="sigil">cobweb</div>
+<button id="listen-btn">listen</button>
+
+<div id="scream-overlay">
+  <div id="scream-text"></div>
+  <div id="scream-timer">fading in 30 seconds</div>
+  <div id="scream-drain"></div>
+</div>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════════
+// GOOGLE SHEETS — paste your published CSV URLs here
+// ═══════════════════════════════════════════════════════════
+const SHEET_CSV_URL  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGPc7hKXGZ1FKR8E0Vnks6W0NdTVB00eaR6C4Tqi_cqVSwOLZYwIjs1yeCym_p3se6kN7JyVqc5ZXp/pub?output=csv';
+const SCREAM_CSV_URL = 'YOUR_SCREAM_TAB_CSV_URL_HERE';
+
+// ═══════════════════════════════════════════════════════════
+// AUDIO SHEET
+// ─────────────────────────────────────────────────────────
+// 1. In your Google Sheet, create a tab called "audio"
+// 2. Put one Drive file ID per row in column A — no header
+// 3. Publish that tab to the web as CSV
+//    (File → Share → Publish to web → audio tab → CSV)
+// 4. Paste the URL below
+//
+// Each Drive file must be shared as "Anyone with the link"
+// ═══════════════════════════════════════════════════════════
+const AUDIO_CSV_URL = 'YOUR_AUDIO_TAB_CSV_URL_HERE';
+
+const SCREAM_DURATION_MS = 30000;
+const SCREAM_POLL_MS     = 3000;
+
+// ── Audio behaviour — tweak these freely ──────────────────
+const AUDIO_VOLUME     = 0.18;   // 0.0 (silent) → 1.0 (full)
+const AUDIO_MIN_GAP_MS = 10000;  // minimum gap between clips (ms)
+const AUDIO_MAX_GAP_MS = 15000;  // maximum gap between clips (ms)
+
+// ═══════════════════════════════════════════════════════════
+// FALLBACK MESSAGES — used if the sheet fails to load
+// ═══════════════════════════════════════════════════════════
+let MESSAGES = [
+  "the signal is lost",
+  "no messages found",
+  "the feed is empty",
+  "waiting for transmission",
+  "this is a test",
+];
+
+let IMPORTANT_MESSAGES = [
+  "connection failed",
+];
+
+// Starts empty — filled from the audio sheet on load.
+// If the sheet fails, audio simply won't play (no crash).
+let AUDIO_FILE_IDS = [];
+
+// ═══════════════════════════════════════════════════════════
+// WEB CANVAS
+// ═══════════════════════════════════════════════════════════
+const webCanvas = document.getElementById('web-canvas');
+const wCtx      = webCanvas.getContext('2d');
+let nodes = [];
+
+function resizeWeb() {
+  webCanvas.width  = window.innerWidth;
+  webCanvas.height = window.innerHeight;
+  buildWeb();
+}
+
+function buildWeb() {
+  const W = webCanvas.width, H = webCanvas.height;
+  nodes = [];
+  const anchors = [
+    [0,0],[W*0.3,0],[W*0.6,0],[W,0],
+    [W,H*0.3],[W,H*0.7],[W,H],
+    [W*0.7,H],[W*0.35,H],[0,H],
+    [0,H*0.65],[0,H*0.3],
+    [W*0.22,H*0.18],[W*0.75,H*0.22],
+    [W*0.15,H*0.7],[W*0.8,H*0.75],
+    [W*0.5,H*0.5],
+  ];
+  anchors.forEach(([x,y]) => nodes.push({ x, y }));
+
+  wCtx.clearRect(0, 0, W, H);
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const dx   = nodes[i].x - nodes[j].x;
+      const dy   = nodes[i].y - nodes[j].y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < W * 0.45) {
+        const alpha = (1 - dist / (W * 0.45)) * 0.09;
+        wCtx.strokeStyle = `rgba(160, 180, 210, ${alpha})`;
+        wCtx.lineWidth   = 0.6;
+        wCtx.beginPath();
+        const mx = (nodes[i].x + nodes[j].x) / 2 + (Math.random() - 0.5) * 40;
+        const my = (nodes[i].y + nodes[j].y) / 2 + (Math.random() - 0.5) * 40;
+        wCtx.moveTo(nodes[i].x, nodes[i].y);
+        wCtx.quadraticCurveTo(mx, my, nodes[j].x, nodes[j].y);
+        wCtx.stroke();
+      }
+    }
+  }
+  nodes.forEach(n => {
+    wCtx.beginPath();
+    wCtx.arc(n.x, n.y, 1.2, 0, Math.PI * 2);
+    wCtx.fillStyle = 'rgba(180, 200, 230, 0.18)';
+    wCtx.fill();
+  });
+}
+
+window.addEventListener('resize', resizeWeb);
+
+// ═══════════════════════════════════════════════════════════
+// MESSAGE SPAWNER
+// ═══════════════════════════════════════════════════════════
+const stage = document.getElementById('stage');
+const SIZES         = ['size-sm','size-sm','size-md','size-md','size-md','size-lg','size-xl'];
+const COLORS        = ['col-pale','col-silver','col-cold','col-ghost','col-amber','col-blood','col-bright'];
+const COLOR_WEIGHTS = [4, 4, 4, 3, 2, 1, 1];
+
+function pickColor() {
+  const total = COLOR_WEIGHTS.reduce((a,b) => a + b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < COLORS.length; i++) {
+    r -= COLOR_WEIGHTS[i];
+    if (r <= 0) return COLORS[i];
+  }
+  return COLORS[0];
+}
+
+function calcDuration(text) {
+  return Math.min(9000, Math.max(2500, text.length * 65));
+}
+
+function randomPos() {
+  const margin = 0.08;
+  return {
+    x: margin + Math.random() * (1 - margin * 2),
+    y: margin + Math.random() * (1 - margin * 2),
+  };
+}
+
+let usedMessages = [];
+function pickMessage() {
+  if (usedMessages.length >= MESSAGES.length) usedMessages = [];
+  const remaining = MESSAGES.filter(m => !usedMessages.includes(m));
+  const m = remaining[Math.floor(Math.random() * remaining.length)];
+  usedMessages.push(m);
+  return m;
+}
+
+function spawnMessage() {
+  const text     = pickMessage();
+  const pos      = randomPos();
+  const size     = SIZES[Math.floor(Math.random() * SIZES.length)];
+  const color    = pickColor();
+  const duration = calcDuration(text);
+  const rot      = (Math.random() - 0.5) * 4;
+
+  const el = document.createElement('div');
+  el.className   = `msg ${size} ${color}`;
+  el.textContent = text;
+  el.style.left      = (pos.x * 100) + '%';
+  el.style.top       = (pos.y * 100) + '%';
+  el.style.transform = `rotate(${rot}deg) translateY(6px)`;
+
+  stage.appendChild(el);
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      el.style.transform = `rotate(${rot}deg) translateY(0)`;
+      el.classList.add('visible');
+    });
+  });
+
+  setTimeout(() => {
+    el.classList.remove('visible');
+    el.classList.add('fading');
+    el.style.transform = `rotate(${rot}deg) translateY(-5px)`;
+    setTimeout(() => el.remove(), 1500);
+  }, duration);
+}
+
+let usedImportant = [];
+function pickImportant() {
+  if (usedImportant.length >= IMPORTANT_MESSAGES.length) usedImportant = [];
+  const remaining = IMPORTANT_MESSAGES.filter(m => !usedImportant.includes(m));
+  const m = remaining[Math.floor(Math.random() * remaining.length)];
+  usedImportant.push(m);
+  return m;
+}
+
+function spawnImportant() {
+  if (IMPORTANT_MESSAGES.length === 0) return;
+  const text     = pickImportant();
+  const duration = calcDuration(text) * 1.4;
+  const yPct     = (0.15 + Math.random() * 0.65) * 100;
+
+  const el = document.createElement('div');
+  el.className   = 'msg size-lg important';
+  el.textContent = text;
+  el.style.top       = yPct + '%';
+  el.style.transform = 'translateX(-50%) translateY(6px)';
+
+  stage.appendChild(el);
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      el.style.transform = 'translateX(-50%) translateY(0)';
+      el.classList.add('visible');
+    });
+  });
+
+  setTimeout(() => {
+    el.classList.remove('visible');
+    el.classList.add('fading');
+    el.style.transform = 'translateX(-50%) translateY(-5px)';
+    setTimeout(() => el.remove(), 1500);
+  }, duration);
+}
+
+function scheduleNextImportant() {
+  const delay = 8000 + Math.random() * 10000;
+  setTimeout(() => { spawnImportant(); scheduleNextImportant(); }, delay);
+}
+
+function scheduleNext() {
+  const delay = 800 + Math.random() * 2700;
+  setTimeout(() => { spawnMessage(); scheduleNext(); }, delay);
+}
+
+// ═══════════════════════════════════════════════════════════
+// AUDIO ENGINE
+// ═══════════════════════════════════════════════════════════
+let audioEnabled  = false;
+let shuffledIds   = [];
+let currentAudio  = null;
+
+// Fisher-Yates shuffle
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Pulls the next ID from the shuffled deck, refilling when exhausted
+function nextFileId() {
+  if (shuffledIds.length === 0) shuffledIds = shuffle(AUDIO_FILE_IDS);
+  return shuffledIds.pop();
+}
+
+function driveUrl(id) {
+  return `https://drive.google.com/uc?export=download&id=${id}`;
+}
+
+function playNextClip() {
+  // Safety checks: audio must be on, and we need at least one file ID
+  if (!audioEnabled) return;
+  if (AUDIO_FILE_IDS.length === 0) return;
+
+  const id = nextFileId();
+  if (!id) return; // shouldn't happen, but guard anyway
+
+  // Stop anything currently playing
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.src = ''; // release the resource
+    currentAudio = null;
+  }
+
+  const audio  = new Audio(driveUrl(id));
+  audio.volume = AUDIO_VOLUME;
+  currentAudio = audio;
+
+  audio.play().catch(() => {
+    // Silently swallow any play() rejection
+    // (e.g. file not found, CORS issue — won't break anything else)
+  });
+
+  // Schedule next clip after a random gap within the configured range
+  const gap = AUDIO_MIN_GAP_MS + Math.random() * (AUDIO_MAX_GAP_MS - AUDIO_MIN_GAP_MS);
+  setTimeout(() => {
+    if (audioEnabled) playNextClip();
+  }, gap);
+}
+
+// ── Listen toggle button ───────────────────────────────────
+const listenBtn = document.getElementById('listen-btn');
+
+listenBtn.addEventListener('click', () => {
+  audioEnabled = !audioEnabled;
+  listenBtn.classList.toggle('audio-on', audioEnabled);
+  listenBtn.textContent = audioEnabled ? 'listening' : 'listen';
+
+  if (audioEnabled) {
+    // User gesture has now unlocked autoplay — start the chain
+    playNextClip();
+  } else {
+    // Stop and discard the current clip immediately
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.src = '';
+      currentAudio = null;
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+// SCREAM
+// ═══════════════════════════════════════════════════════════
+const screamOverlay = document.getElementById('scream-overlay');
+const screamText    = document.getElementById('scream-text');
+const screamDrain   = document.getElementById('scream-drain');
+let screamActive    = false;
+let lastScreamTs    = 0;
+let screamDrainAnim = null;
+
+function showScream(message) {
+  if (screamActive) return;
+  screamActive = true;
+  screamText.textContent = message;
+  screamDrain.style.transition = 'none';
+  screamDrain.style.transform  = 'scaleX(1)';
+  screamOverlay.classList.add('active');
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      screamDrain.style.transition = `transform ${SCREAM_DURATION_MS}ms linear`;
+      screamDrain.style.transform  = 'scaleX(0)';
+    });
+  });
+  screamDrainAnim = setTimeout(dismissScream, SCREAM_DURATION_MS);
+}
+
+function dismissScream() {
+  screamOverlay.classList.remove('active');
+  setTimeout(() => { screamText.textContent = ''; screamActive = false; }, 1300);
+}
+
+screamOverlay.addEventListener('click', () => {
+  if (!screamActive) return;
+  clearTimeout(screamDrainAnim);
+  dismissScream();
+});
+
+function pollScream() {
+  if (!SCREAM_CSV_URL || SCREAM_CSV_URL === 'YOUR_SCREAM_TAB_CSV_URL_HERE') return;
+  fetch(SCREAM_CSV_URL + '&t=' + Date.now())
+    .then(r => r.text())
+    .then(text => {
+      const rows = text.trim().split('\n');
+      if (!rows[0]) return;
+      const cols = rows[0].split(',').map(c => c.replace(/^"|"$/g, '').trim());
+      const ts   = parseInt(cols[0], 10);
+      const msg  = cols[1] || '';
+      if (!ts || !msg) return;
+      const age = Date.now() - ts;
+      if (ts > lastScreamTs && age < 35000) { lastScreamTs = ts; showScream(msg); }
+    })
+    .catch(() => {});
+}
+
+function startScreamPoller() {
+  if (!SCREAM_CSV_URL || SCREAM_CSV_URL === 'YOUR_SCREAM_TAB_CSV_URL_HERE') return;
+  pollScream();
+  setInterval(pollScream, SCREAM_POLL_MS);
+}
+
+// ═══════════════════════════════════════════════════════════
+// CSV PARSERS
+// ═══════════════════════════════════════════════════════════
+
+// Messages sheet: two columns — type, message
+function parseCSV(text) {
+  const rows = text.trim().split('\n');
+  const regular = [], important = [];
+  for (const row of rows) {
+    const cols = row.split(/[\t,]/).map(c => c.replace(/^"|"$/g, '').trim());
+    const type = (cols[0] || '').toLowerCase();
+    const msg  = cols[1] || '';
+    if (!msg) continue;
+    if (type === 'important') important.push(msg);
+    else regular.push(msg);
+  }
+  return { regular, important };
+}
+
+// Audio sheet: one column — one Drive file ID per row, no header
+function parseAudioCSV(text) {
+  return text
+    .trim()
+    .split('\n')
+    .map(row => row.replace(/^"|"$/g, '').trim()) // strip any CSV quoting
+    .filter(id => id.length > 10);                // ignore blank/short rows
+}
+
+// ═══════════════════════════════════════════════════════════
+// BOOT — fetch all sheets in parallel, then start
+// ═══════════════════════════════════════════════════════════
+function startApp() {
+  resizeWeb();
+  // Staggered initial burst so the page doesn't start empty
+  setTimeout(() => spawnMessage(), 200);
+  setTimeout(() => spawnMessage(), 900);
+  setTimeout(() => spawnMessage(), 1600);
+  scheduleNext();
+
+  if (IMPORTANT_MESSAGES.length > 0) {
+    setTimeout(() => { spawnImportant(); scheduleNextImportant(); }, 10000);
+  }
+
+  startScreamPoller();
+  // Note: audio doesn't start here — it waits for the user to click "listen"
+}
+
+// Build an array of fetch promises — only for URLs that have been configured
+const fetchJobs = [];
+
+if (SHEET_CSV_URL && SHEET_CSV_URL !== 'YOUR_GOOGLE_SHEETS_CSV_URL_HERE') {
+  fetchJobs.push(
+    fetch(SHEET_CSV_URL)
+      .then(r => { if (!r.ok) throw new Error('messages fetch failed'); return r.text(); })
+      .then(text => {
+        const { regular, important } = parseCSV(text);
+        if (regular.length)   MESSAGES           = regular;
+        if (important.length) IMPORTANT_MESSAGES = important;
+      })
+      .catch(() => { /* silently use fallback messages */ })
+  );
+}
+
+if (AUDIO_CSV_URL && AUDIO_CSV_URL !== 'YOUR_AUDIO_TAB_CSV_URL_HERE') {
+  fetchJobs.push(
+    fetch(AUDIO_CSV_URL)
+      .then(r => { if (!r.ok) throw new Error('audio fetch failed'); return r.text(); })
+      .then(text => {
+        const ids = parseAudioCSV(text);
+        if (ids.length) AUDIO_FILE_IDS = ids;
+        // If empty, AUDIO_FILE_IDS stays [] and audio is silently disabled
+      })
+      .catch(() => { /* silently — audio just won't play */ })
+  );
+}
+
+// Wait for ALL configured fetches to finish (pass or fail) before starting.
+// Promise.allSettled never rejects, so startApp() always runs.
+Promise.allSettled(fetchJobs).then(() => startApp());
+
+// ═══════════════════════════════════════════════════════════
+// CURSOR
+// ═══════════════════════════════════════════════════════════
+const cursor = document.getElementById('cursor');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top  = e.clientY + 'px';
+});
+
+document.addEventListener('click', () => spawnMessage());
+document.addEventListener('touchend', () => spawnMessage(), { passive: true });
+</script>
+</body>
+</html>
