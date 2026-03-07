@@ -619,7 +619,9 @@ function startApp() {
 }
 
 // Build an array of fetch promises — only for URLs that have been configured
-const fetchJobs = [];
+function loadMessagesFromSheet() {
+
+  const fetchJobs = [];
 
   if (SHEET_CSV_URL && SHEET_CSV_URL !== 'YOUR_GOOGLE_SHEETS_CSV_URL_HERE') {
     fetchJobs.push(
@@ -635,6 +637,7 @@ const fetchJobs = [];
         .catch(() => { /* silently use fallback messages */ })
     );
   }
+}
 
 if (AUDIO_CSV_URL && AUDIO_CSV_URL !== 'YOUR_AUDIO_TAB_CSV_URL_HERE') {
   fetchJobs.push(
