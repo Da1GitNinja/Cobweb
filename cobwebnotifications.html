@@ -132,7 +132,8 @@ const AUDIO_MIN_GAP_MS   = 10000;
 const AUDIO_MAX_GAP_MS   = 15000;
 const AMBIENT_URL = 'https://www.dropbox.com/scl/fi/pxycopdy54hpissp7lrhc/Ambient.mp3?rlkey=drkki89uej29ts8x2ey570z4e&st=c98i4yzc&raw=1';
 const AMBIENT_VOLUME = 0.08;
-
+const NOTIF_SOUND_URL = 'YOUR_AUDIO_FILE_URL_HERE';
+ 
 let MESSAGES           = ["the signal is lost","no messages found","the feed is empty","waiting for transmission","this is a test"];
 let IMPORTANT_MESSAGES = ["connection failed"];
 let AUDIO_FILE_IDS     = [];
@@ -242,6 +243,11 @@ function showNotif(message) {
   // Always replace with the latest scream — old one is gone
   pendingScream = message;
   notifBtn.classList.add('active');
+  if (NOTIF_SOUND_URL) {
+    const notifSound = new Audio(NOTIF_SOUND_URL);
+    notifSound.volume = 0.6;
+    notifSound.play().catch(() => {});
+  }
 }
 
 function clearNotif() {
