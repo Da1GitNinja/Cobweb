@@ -138,7 +138,7 @@ function scheduleNextImportant() { setTimeout(()=>{ spawnImportant(); scheduleNe
 function scheduleNext() { setTimeout(()=>{ spawnMessage(); scheduleNext(); },800+Math.random()*2700); }
 
 // ── Audio engine ───────────────────────────────────────────
-let audioEnabled=false, shuffledIds=[], currentAudio=null, ambientAudio=null;;
+let audioEnabled=false, shuffledIds=[], currentAudio=null, ambientAudio=null;
 function shuffle(arr) { const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a; }
 function nextFileId() { if(!shuffledIds.length)shuffledIds=shuffle(AUDIO_FILE_IDS); return shuffledIds.pop(); }
 function driveUrl(id) { return id; }
