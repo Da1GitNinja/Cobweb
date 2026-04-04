@@ -139,7 +139,7 @@ function scheduleNext() { setTimeout(()=>{ spawnMessage(); scheduleNext(); },800
 let audioEnabled=false, shuffledIds=[], currentAudio=null;
 function shuffle(arr) { const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a; }
 function nextFileId() { if(!shuffledIds.length)shuffledIds=shuffle(AUDIO_FILE_IDS); return shuffledIds.pop(); }
-function driveUrl(id) { return `https://drive.google.com/uc?export=download&id=${id}`; }
+function driveUrl(id) { return `https://drive.google.com/uc?export=view&id=${id}`; }
 function playNextClip() {
   if(!audioEnabled||!AUDIO_FILE_IDS.length)return;
   const id=nextFileId(); if(!id)return;
