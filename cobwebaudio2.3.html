@@ -66,6 +66,8 @@ const SCREAM_POLL_MS     = 3000;
 const AUDIO_VOLUME       = 0.18;
 const AUDIO_MIN_GAP_MS   = 10000;
 const AUDIO_MAX_GAP_MS   = 15000;
+const AMBIENT_URL = 'https://www.dropbox.com/scl/fi/pxycopdy54hpissp7lrhc/Ambient.mp3?rlkey=drkki89uej29ts8x2ey570z4e&st=c98i4yzc&raw=1';
+const AMBIENT_VOLUME = 0.08; 
 
 let MESSAGES           = ["the signal is lost","no messages found","the feed is empty","waiting for transmission","this is a test"];
 let IMPORTANT_MESSAGES = ["connection failed"];
@@ -136,7 +138,7 @@ function scheduleNextImportant() { setTimeout(()=>{ spawnImportant(); scheduleNe
 function scheduleNext() { setTimeout(()=>{ spawnMessage(); scheduleNext(); },800+Math.random()*2700); }
 
 // ── Audio engine ───────────────────────────────────────────
-let audioEnabled=false, shuffledIds=[], currentAudio=null;
+let audioEnabled=false, shuffledIds=[], currentAudio=null, ambientAudio=null;;
 function shuffle(arr) { const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a; }
 function nextFileId() { if(!shuffledIds.length)shuffledIds=shuffle(AUDIO_FILE_IDS); return shuffledIds.pop(); }
 function driveUrl(id) { return id; }
@@ -154,7 +156,18 @@ listenBtn.addEventListener('click',()=>{
   audioEnabled=!audioEnabled;
   listenBtn.classList.toggle('audio-on',audioEnabled);
   listenBtn.textContent=audioEnabled?'listening':'listen';
-  if(audioEnabled){playNextClip();}else{if(currentAudio){currentAudio.pause();currentAudio.src='';currentAudio=null;}}
+  if(audioEnabled){
+    playNextClip();
+    if(AMBIENT_URL){
+      ambientAudio=new Audio(AMBIENT_URL);
+      ambientAudio.volume=AMBIENT_VOLUME;
+      ambientAudio.loop=true;
+      ambientAudio.play().catch(()=>{});
+    }
+  } else {
+    if(currentAudio){currentAudio.pause();currentAudio.src='';currentAudio=null;}
+    if(ambientAudio){ambientAudio.pause();ambientAudio.src='';ambientAudio=null;}
+  }
 });
 
 // ── Scream ─────────────────────────────────────────────────
