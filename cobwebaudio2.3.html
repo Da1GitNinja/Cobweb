@@ -247,6 +247,7 @@ Promise.allSettled(bootFetchJobs).then(()=>{
   setInterval(loadMessagesFromSheet, 10000);
 });
 
+ 
 // ── Cursor ─────────────────────────────────────────────────
 const cursor=document.getElementById('cursor');
 document.addEventListener('mousemove',e=>{ cursor.style.left=e.clientX+'px'; cursor.style.top=e.clientY+'px'; });
