@@ -176,7 +176,7 @@ function pollScream() {
   if(!SCREAM_CSV_URL||SCREAM_CSV_URL==='YOUR_SCREAM_TAB_CSV_URL_HERE')return;
   fetch(SCREAM_CSV_URL+'&t='+Date.now()).then(r=>r.text()).then(text=>{
     const rows=text.trim().split('\n'); if(!rows[0])return;
-    const cols=rows[0].split(',').map(c=>c.replace(/^"|"$/g,'').trim());
+    const cols=rows[0].split(/,(.+)/).map(c=>c.replace(/^"|"$/g,'').trim());
     const ts=parseInt(cols[0],10), msg=cols[1]||''; if(!ts||!msg)return;
     if(screamFirstPoll){ lastScreamTs=ts; screamFirstPoll=false; return; }
     if(ts>lastScreamTs){ lastScreamTs=ts; showScream(msg); }
