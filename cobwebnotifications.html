@@ -358,6 +358,7 @@ function runGlitches() {
 // ── startApp ───────────────────────────────────────────────
 function startApp() {
   resizeWeb();
+  runGlitches()
   setTimeout(()=>spawnMessage(),200);
   setTimeout(()=>spawnMessage(),900);
   setTimeout(()=>spawnMessage(),1600);
