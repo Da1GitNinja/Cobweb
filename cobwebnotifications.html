@@ -250,12 +250,14 @@ function clearNotif() {
   notifBtn.classList.remove('active');
 }
 
-notifBtn.addEventListener('click', () => {
+function handleNotifTap() {
   if (!pendingScream) return;
   const msg = pendingScream;
-  clearNotif();           // consume it — can't be seen again
+  clearNotif();
   showScream(msg);
-});
+}
+notifBtn.addEventListener('click', handleNotifTap);
+notifBtn.addEventListener('touchend', e => { e.preventDefault(); handleNotifTap(); });
 
 // ── Scream overlay ─────────────────────────────────────────
 const screamOverlay=document.getElementById('scream-overlay'), screamText=document.getElementById('scream-text'), screamDrain=document.getElementById('scream-drain');
@@ -269,7 +271,9 @@ function showScream(message) {
   screamDrainAnim=setTimeout(dismissScream,SCREAM_DURATION_MS);
 }
 function dismissScream() { screamOverlay.classList.remove('active'); setTimeout(()=>{screamText.textContent='';screamActive=false;},1300); }
-screamOverlay.addEventListener('click',()=>{ if(!screamActive)return; clearTimeout(screamDrainAnim); dismissScream(); });
+function handleScreamTap() { if(!screamActive)return; clearTimeout(screamDrainAnim); dismissScream(); }
+screamOverlay.addEventListener('click', handleScreamTap);
+screamOverlay.addEventListener('touchend', e => { e.preventDefault(); handleScreamTap(); });
 
 // ── Scream poller — now routes to notif, not direct show ───
 let screamFirstPoll=true, lastScreamTs=0;
