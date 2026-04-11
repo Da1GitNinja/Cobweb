@@ -44,56 +44,26 @@
   #listen-btn.audio-on::before { content: '·'; margin-right: 6px; animation: pulse-dot 2s ease-in-out infinite; }
   @keyframes pulse-dot { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
 
-  /* ── Notification button ── */
-  #notif-btn {
-  position: fixed; top: 20px; right: 22px; z-index: 50;
-  width: 144px; height: 144px; border-radius: 50%;
-  background: none; border: none;
-  cursor: pointer; /* ← was cursor:none */
-  display: flex; align-items: center; justify-content: center;
-  pointer-events: none; opacity: 0; transition: opacity 0.8s ease;
-  touch-action: manipulation; /* ← prevents double-tap delay */
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
+/* ── Notification banner ── */
+#notif-banner {
+  position: fixed;
+  top: -80px;
+  left: 0; right: 0;
+  z-index: 9999;
+  background: rgba(160, 0, 0, 0.92);
+  color: rgba(255, 230, 230, 0.95);
+  text-align: center;
+  padding: 18px 24px;
+  font-family: 'Special Elite', monospace;
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: top 0.4s ease;
+  text-shadow: 0 0 12px rgba(255,100,100,0.5);
 }
-  #notif-btn.active {
-    pointer-events: all;
-    opacity: 1;
-  }
-  /* Outer ring */
-  #notif-btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    border: 1px solid rgba(190,40,40,0);
-    transition: border-color 0.8s ease;
-  }
-  #notif-btn.active::before {
-    border-color: rgba(190,40,40,0.4);
-    animation: notif-ring 2.4s ease-in-out infinite;
-  }
-  /* Inner orb */
-  #notif-orb {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: rgba(200,40,40,0);
-    transition: background 0.8s ease, box-shadow 0.8s ease;
-  }
-  #notif-btn.active #notif-orb {
-    background: rgba(200,40,40,0.9);
-    box-shadow: 0 0 10px rgba(200,0,0,0.7), 0 0 28px rgba(160,0,0,0.35);
-    animation: notif-pulse 2.4s ease-in-out infinite;
-  }
-  @keyframes notif-pulse {
-    0%,100% { transform: scale(1); opacity: 0.85; }
-    50%      { transform: scale(1.25); opacity: 1; }
-  }
-  @keyframes notif-ring {
-    0%,100% { transform: scale(1); opacity: 0.5; }
-    50%      { transform: scale(1.3); opacity: 0.15; }
-  }
+#notif-banner.active { top: 0; }
+ 
 </style>
 </head>
 <body>
@@ -103,10 +73,8 @@
 <div id="sigil">cobweb</div>
 <button id="listen-btn">listen</button>
 
-<!-- Notification orb (top right) -->
-<button id="notif-btn" aria-label="View message">
-  <span id="notif-orb"></span>
-</button>
+<!-- Notification banner stuff -->
+<div id="notif-banner">tap to receive transmission</div>
 
 <div id="scream-overlay">
   <div id="scream-text"></div>
@@ -231,16 +199,16 @@ listenBtn.addEventListener('click',()=>{
   }
 });
 
-// ── Notification orb ───────────────────────────────────────
-const notifBtn   = document.getElementById('notif-btn');
-let pendingScream = null;   // holds message string while unread
+
+const notifBanner = document.getElementById('notif-banner');
+let pendingScream = null;
 
 function showNotif(message) {
-  // Always replace with the latest scream — old one is gone
   pendingScream = message;
-   if (navigator.vibrate) navigator.vibrate([100, 50, 200])
- sendSystemNotif(message)
-  notifBtn.classList.add('active');
+  notifBanner.textContent = message;
+  notifBanner.classList.add('active');
+  if (navigator.vibrate) navigator.vibrate([100, 50, 200]);
+  sendSystemNotif(message);
   if (NOTIF_SOUND_URL) {
     const notifSound = new Audio(NOTIF_SOUND_URL);
     notifSound.volume = 0.6;
@@ -250,7 +218,7 @@ function showNotif(message) {
 
 function clearNotif() {
   pendingScream = null;
-  notifBtn.classList.remove('active');
+  notifBanner.classList.remove('active');
 }
 
 function handleNotifTap() {
@@ -259,8 +227,7 @@ function handleNotifTap() {
   clearNotif();
   showScream(msg);
 }
-notifBtn.addEventListener('click', handleNotifTap);
-
+notifBanner.addEventListener('click', handleNotifTap);
 // ── Scream overlay ─────────────────────────────────────────
 const screamOverlay=document.getElementById('scream-overlay'), screamText=document.getElementById('scream-text'), screamDrain=document.getElementById('scream-drain');
 let screamActive=false, screamDrainAnim=null;
@@ -431,7 +398,7 @@ document.addEventListener('mousemove',e=>{ cursor.style.left=e.clientX+'px'; cur
 document.addEventListener('click',()=>spawnMessage());
 document.addEventListener('touchend', e => {
   // don't spawn message if tapping the orb or scream overlay
-  if (e.target.closest('#notif-btn')) return
+  if (e.target.closest('#notif-banner')) return
   if (e.target.closest('#scream-overlay')) return
   spawnMessage()
 }, {passive: true})
