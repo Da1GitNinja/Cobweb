@@ -338,6 +338,12 @@ if(AUDIO_CSV_URL&&AUDIO_CSV_URL!=='YOUR_AUDIO_TAB_CSV_URL_HERE') {
 Promise.allSettled(bootFetchJobs).then(()=>{
   startApp();
   setInterval(loadMessagesFromSheet, 10000);
+  
+ const params = new URLSearchParams(window.location.search)
+  const screamMessage = params.get('scream')
+  if (screamMessage) {
+    showNotif(screamMessage)
+  }
 });
 
 // ── Cursor ─────────────────────────────────────────────────
