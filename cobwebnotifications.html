@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Cobweb</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#06080a">
 <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Uncial+Antiqua&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -433,6 +435,11 @@ const cursor=document.getElementById('cursor');
 document.addEventListener('mousemove',e=>{ cursor.style.left=e.clientX+'px'; cursor.style.top=e.clientY+'px'; });
 document.addEventListener('click',()=>spawnMessage());
 document.addEventListener('touchend',()=>spawnMessage(),{passive:true});
+
+ // ── Register service worker ─────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js')
+}
 </script>
 </body>
 </html>
