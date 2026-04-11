@@ -308,8 +308,22 @@ function loadMessagesFromSheet() {
   if(!SHEET_CSV_URL||SHEET_CSV_URL==='YOUR_GOOGLE_SHEETS_CSV_URL_HERE') return Promise.resolve();
   return fetch(SHEET_CSV_URL+'&t='+Date.now())
     .then(r=>{ if(!r.ok)throw new Error('messages fetch failed'); return r.text(); })
-    .then(text=>{ const {regular,important}=parseCSV(text); if(regular.length)MESSAGES=regular; if(important.length)IMPORTANT_MESSAGES=important; })
-    .catch(()=>{});
+    .then(text=>{
+      const {regular,important}=parseCSV(text);
+      if(regular.length) MESSAGES=regular;
+      if(important.length) IMPORTANT_MESSAGES=important;
+      // save to localStorage after every successful fetch
+      localStorage.setItem('cobweb_messages', JSON.stringify({regular, important}));
+    })
+    .catch(()=>{
+      // fetch failed — try to load last known messages from localStorage
+      const cached = localStorage.getItem('cobweb_messages');
+      if(cached) {
+        const {regular, important} = JSON.parse(cached);
+        if(regular.length) MESSAGES=regular;
+        if(important.length) IMPORTANT_MESSAGES=important;
+      }
+    });
 }
 
  // ── Glotches ────────────────────────────────────────────
