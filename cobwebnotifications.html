@@ -50,13 +50,13 @@
   background: none; border: none;
   cursor: pointer; /* ← was cursor:none */
   display: flex; align-items: center; justify-content: center;
-  pointer-events: none; opacity: 0; transition: opacity 0.8s ease;
+  pointer-events: all; opacity: 0; visibility: hidden; transition: opacity 0.8s ease, visibility 0.8s ease;
   touch-action: manipulation; /* ← prevents double-tap delay */
 }
   #notif-btn.active {
-    pointer-events: all;
-    opacity: 1;
-  }
+  opacity: 1;
+  visibility: visible;
+}
   /* Outer ring */
   #notif-btn::before {
     content: '';
@@ -257,7 +257,7 @@ function handleNotifTap() {
   showScream(msg);
 }
 notifBtn.addEventListener('click', handleNotifTap);
-notifBtn.addEventListener('touchend', e => { e.preventDefault(); handleNotifTap(); });
+notifBtn.addEventListener('pointerup', e => { e.preventDefault(); handleNotifTap(); });
 
 // ── Scream overlay ─────────────────────────────────────────
 const screamOverlay=document.getElementById('scream-overlay'), screamText=document.getElementById('scream-text'), screamDrain=document.getElementById('scream-drain');
