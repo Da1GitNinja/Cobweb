@@ -312,6 +312,49 @@ function loadMessagesFromSheet() {
     .catch(()=>{});
 }
 
+ // ── Glotches ────────────────────────────────────────────
+ const GLITCH_CHARS = '█▓░▒#@$%&?!'
+// these are the symbols that will briefly replace real characters
+
+function glitchElement(el) {
+  const original = el.textContent
+  // save the original text so we can restore it
+
+  const chars = original.split('')
+  // split into individual characters so we can swap some out
+
+  // corrupt 2-4 random characters
+  const numGlitches = 2 + Math.floor(Math.random() * 3)
+  for (let i = 0; i < numGlitches; i++) {
+    const pos = Math.floor(Math.random() * chars.length)
+    // pick a random position in the text
+    chars[pos] = GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)]
+    // replace it with a random glitch symbol
+  }
+
+  el.textContent = chars.join('')
+  // put the corrupted text back into the element
+
+  setTimeout(() => {
+    el.textContent = original
+    // restore original text after 80ms — just a brief flicker
+  }, 80)
+}
+
+function runGlitches() {
+  const messages = document.querySelectorAll('.msg.visible')
+  // grab all currently visible messages on screen
+
+  if (messages.length > 0) {
+    const target = messages[Math.floor(Math.random() * messages.length)]
+    // pick one at random
+    glitchElement(target)
+  }
+
+  setTimeout(runGlitches, 800 + Math.random() * 2000)
+  // run again in 0.8 to 2.8 seconds — random so it feels organic
+}
+ 
 // ── startApp ───────────────────────────────────────────────
 function startApp() {
   resizeWeb();
