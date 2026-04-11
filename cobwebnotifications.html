@@ -242,6 +242,7 @@ let pendingScream = null;   // holds message string while unread
 function showNotif(message) {
   // Always replace with the latest scream — old one is gone
   pendingScream = message;
+   if (navigator.vibrate) navigator.vibrate([100, 50, 200])
   notifBtn.classList.add('active');
   if (NOTIF_SOUND_URL) {
     const notifSound = new Audio(NOTIF_SOUND_URL);
