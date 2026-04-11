@@ -221,6 +221,7 @@ listenBtn.addEventListener('click',()=>{
   audioEnabled=!audioEnabled;
   listenBtn.classList.toggle('audio-on',audioEnabled);
   listenBtn.textContent=audioEnabled?'listening':'listen';
+ requestNotifPermission()
   if(audioEnabled){
     playNextClip();
     if(AMBIENT_URL){
@@ -243,6 +244,7 @@ function showNotif(message) {
   // Always replace with the latest scream — old one is gone
   pendingScream = message;
    if (navigator.vibrate) navigator.vibrate([100, 50, 200])
+ sendSystemNotif(message)
   notifBtn.classList.add('active');
   if (NOTIF_SOUND_URL) {
     const notifSound = new Audio(NOTIF_SOUND_URL);
@@ -327,6 +329,27 @@ function loadMessagesFromSheet() {
     });
 }
 
+ // ── Notifications ───────────────────────────────────────────
+function requestNotifPermission() {
+  // only ask if they haven't been asked before and the browser supports it
+  if (!('Notification' in window)) return
+  if (Notification.permission === 'granted') return
+  if (Notification.permission === 'denied') return
+  // ask once — browser remembers the answer forever
+  Notification.requestPermission()
+}
+
+function sendSystemNotif(message) {
+  if (!('Notification' in window)) return
+  if (Notification.permission !== 'granted') return
+  new Notification('The Cobweb', {
+    body: message,
+    icon: '/favicon.ico',
+    // silent: false means it uses the phone's default notification sound
+    silent: false
+  })
+}
+ 
  // ── Glotches ────────────────────────────────────────────
  const GLITCH_CHARS = '█▓░▒#@$%&?!'
 // these are the symbols that will briefly replace real characters
