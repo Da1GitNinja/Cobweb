@@ -17,10 +17,10 @@
   .msg { position: absolute; max-width: min(420px,80vw); font-family: 'Special Elite',monospace; line-height: 1.55; pointer-events: none; opacity: 0; transition: opacity 0.9s ease,transform 0.9s ease; text-shadow: 0 0 20px currentColor; user-select: none; }
   .msg.visible { opacity: 1; }
   .msg.fading  { opacity: 0; transition: opacity 1.4s ease,transform 1.4s ease; }
-  .msg.size-sm { font-size: clamp(10px,1.8vw,13px); }
-  .msg.size-md { font-size: clamp(12px,2.2vw,16px); }
-  .msg.size-lg { font-size: clamp(14px,2.8vw,20px); }
-  .msg.size-xl { font-size: clamp(18px,4vw,28px); letter-spacing: 0.05em; }
+  .msg.size-sm { font-size: clamp(13px,1.8vw,13px); }
+  .msg.size-md { font-size: clamp(15px,2.2vw,16px); }
+  .msg.size-lg { font-size: clamp(17px,2.8vw,20px); }
+  .msg.size-xl { font-size: clamp(22px,4vw,28px); letter-spacing: 0.05em; }
   .msg.col-pale   { color: rgba(200,215,230,0.55); }
   .msg.col-silver { color: rgba(160,180,200,0.45); }
   .msg.col-cold   { color: rgba(140,195,220,0.50); }
@@ -38,31 +38,21 @@
   #scream-overlay.active #scream-timer { opacity: 1; }
   #scream-drain { position: absolute; bottom: 0; left: 0; height: 3px; width: 100%; background: linear-gradient(90deg,rgba(220,0,0,0.9) 0%,rgba(180,0,0,0.6) 100%); transform-origin: left; transform: scaleX(1); }
   #sigil { position: fixed; bottom: 22px; right: 24px; z-index: 10; font-family: 'Uncial Antiqua',serif; font-size: 11px; letter-spacing: 0.3em; color: rgba(140,160,180,0.2); text-transform: uppercase; pointer-events: none; }
-  #listen-btn { position: fixed; bottom: 22px; left: 24px; z-index: 10; font-family: 'Uncial Antiqua',serif; font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(140,160,180,0.3); background: none; border: none; cursor: none; padding: 6px 0; transition: color 0.6s ease; user-select: none; }
-  #listen-btn:hover { color: rgba(160,200,230,0.65); }
+  #listen-btn { position: fixed; bottom: 22px; left: 24px; z-index: 10; font-family: 'Uncial Antiqua',serif; font-size: 14px; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(140,160,180,0.3); background: none; border: none; cursor: pointer; padding: 14px 8px; transition: color 0.6s ease; user-select: none; touch-action: manipulation; }  #listen-btn:hover { color: rgba(160,200,230,0.65); }
   #listen-btn.audio-on { color: rgba(160,200,230,0.55); text-shadow: 0 0 10px rgba(140,190,255,0.9),0 0 25px rgba(140,190,255,0.6),0 0 50px rgba(140,190,255,0.3); }
   #listen-btn.audio-on::before { content: '·'; margin-right: 6px; animation: pulse-dot 2s ease-in-out infinite; }
   @keyframes pulse-dot { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
 
   /* ── Notification button ── */
   #notif-btn {
-    position: fixed;
-    top: 20px;
-    right: 22px;
-    z-index: 50;
-    width: 144px;
-    height: 144px;
-    border-radius: 50%;
-    background: none;
-    border: none;
-    cursor: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.8s ease;
-  }
+  position: fixed; top: 20px; right: 22px; z-index: 50;
+  width: 144px; height: 144px; border-radius: 50%;
+  background: none; border: none;
+  cursor: pointer; /* ← was cursor:none */
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none; opacity: 0; transition: opacity 0.8s ease;
+  touch-action: manipulation; /* ← prevents double-tap delay */
+}
   #notif-btn.active {
     pointer-events: all;
     opacity: 1;
@@ -173,7 +163,7 @@ const COLORS=['col-pale','col-silver','col-cold','col-ghost','col-amber','col-bl
 const COLOR_WEIGHTS=[4,4,4,3,2,1,1];
 
 function pickColor() { const t=COLOR_WEIGHTS.reduce((a,b)=>a+b,0); let r=Math.random()*t; for(let i=0;i<COLORS.length;i++){r-=COLOR_WEIGHTS[i];if(r<=0)return COLORS[i];}return COLORS[0]; }
-function calcDuration(t) { return Math.min(9000,Math.max(2500,t.length*65)); }
+function calcDuration(t) { return Math.min(14000,Math.max(5000,t.length*120)); }
 function randomPos() { const m=0.08; return {x:m+Math.random()*(1-m*2),y:m+Math.random()*(1-m*2)}; }
 
 let usedMessages=[];
@@ -434,7 +424,12 @@ Promise.allSettled(bootFetchJobs).then(()=>{
 const cursor=document.getElementById('cursor');
 document.addEventListener('mousemove',e=>{ cursor.style.left=e.clientX+'px'; cursor.style.top=e.clientY+'px'; });
 document.addEventListener('click',()=>spawnMessage());
-document.addEventListener('touchend',()=>spawnMessage(),{passive:true});
+document.addEventListener('touchend', e => {
+  // don't spawn message if tapping the orb or scream overlay
+  if (e.target.closest('#notif-btn')) return
+  if (e.target.closest('#scream-overlay')) return
+  spawnMessage()
+}, {passive: true})
 
  // ── Register service worker ─────────────────────────────
 if ('serviceWorker' in navigator) {
