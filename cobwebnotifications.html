@@ -11,7 +11,8 @@
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
   :root { --bg: #06080a; --fog: #0d1117; --thread: rgba(180,190,200,0.07); --glow: rgba(160,200,255,0.12); }
   html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); font-family: 'Special Elite','Courier New',monospace; cursor: none; }
-  body::before { content: ''; position: fixed; inset: 0; z-index: 0; background: radial-gradient(ellipse 80% 60% at 20% 80%,rgba(10,20,40,0.8) 0%,transparent 70%),radial-gradient(ellipse 60% 80% at 80% 20%,rgba(5,15,30,0.8) 0%,transparent 70%),radial-gradient(ellipse 100% 100% at 50% 50%,#06080a 0%,#030507 100%); pointer-events: none; }
+ body { position: fixed; inset: 0; }
+ body::before { content: ''; position: fixed; inset: 0; z-index: 0; background: radial-gradient(ellipse 80% 60% at 20% 80%,rgba(10,20,40,0.8) 0%,transparent 70%),radial-gradient(ellipse 60% 80% at 80% 20%,rgba(5,15,30,0.8) 0%,transparent 70%),radial-gradient(ellipse 100% 100% at 50% 50%,#06080a 0%,#030507 100%); pointer-events: none; }
   #web-canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
   #stage { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
   .msg { position: absolute; max-width: min(420px,80vw); font-family: 'Special Elite',monospace; line-height: 1.55; pointer-events: none; opacity: 0; transition: opacity 0.9s ease,transform 0.9s ease; text-shadow: 0 0 20px currentColor; user-select: none; }
@@ -30,7 +31,7 @@
   .msg.col-bright { color: rgba(230,240,255,0.80); }
   .msg.important { color: rgba(210,40,40,0.95) !important; text-shadow: 0 0 18px rgba(200,0,0,0.7),0 0 40px rgba(160,0,0,0.35); text-align: center; left: 50% !important; max-width: min(600px,90vw); letter-spacing: 0.06em; }
   #cursor { position: fixed; z-index: 100; width: 6px; height: 6px; border-radius: 50%; background: rgba(180,200,255,0.6); box-shadow: 0 0 12px rgba(180,200,255,0.4); pointer-events: none; transform: translate(-50%,-50%); }
-  #scream-overlay { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 28px; background: radial-gradient(ellipse at center,rgba(60,0,0,0.97) 0%,rgba(10,0,0,0.99) 100%); opacity: 0; pointer-events: none; transition: opacity 1.2s ease; }
+  #scream-overlay { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 28px; background: radial-gradient(ellipse at center,rgba(60,0,0,0.97) 0%,rgba(10,0,0,0.99) 100%); opacity: 0; pointer-events: none; transition: opacity 1.2s ease; touch-action: manipulation; }
   #scream-overlay.active { opacity: 1; pointer-events: all; }
   #scream-text { font-family: 'Special Elite',monospace; font-size: clamp(22px,5vw,52px); color: #fff; text-align: center; max-width: min(760px,88vw); line-height: 1.4; letter-spacing: 0.04em; text-shadow: 0 0 30px rgba(255,60,60,0.9),0 0 80px rgba(200,0,0,0.5),0 0 160px rgba(160,0,0,0.25); opacity: 0; transform: scale(0.94); transition: opacity 1s ease 0.4s,transform 1s ease 0.4s; }
   #scream-overlay.active #scream-text { opacity: 1; transform: scale(1); }
@@ -52,6 +53,8 @@
   display: flex; align-items: center; justify-content: center;
   pointer-events: none; opacity: 0; transition: opacity 0.8s ease;
   touch-action: manipulation; /* ← prevents double-tap delay */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
   #notif-btn.active {
     pointer-events: all;
@@ -257,7 +260,6 @@ function handleNotifTap() {
   showScream(msg);
 }
 notifBtn.addEventListener('click', handleNotifTap);
-notifBtn.addEventListener('touchend', e => { e.preventDefault(); handleNotifTap(); });
 
 // ── Scream overlay ─────────────────────────────────────────
 const screamOverlay=document.getElementById('scream-overlay'), screamText=document.getElementById('scream-text'), screamDrain=document.getElementById('scream-drain');
@@ -273,7 +275,6 @@ function showScream(message) {
 function dismissScream() { screamOverlay.classList.remove('active'); setTimeout(()=>{screamText.textContent='';screamActive=false;},1300); }
 function handleScreamTap() { if(!screamActive)return; clearTimeout(screamDrainAnim); dismissScream(); }
 screamOverlay.addEventListener('click', handleScreamTap);
-screamOverlay.addEventListener('touchend', e => { e.preventDefault(); handleScreamTap(); });
 
 // ── Scream poller — now routes to notif, not direct show ───
 let screamFirstPoll=true, lastScreamTs=0;
