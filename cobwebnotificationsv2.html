@@ -205,7 +205,7 @@ let pendingScream = null;
 
 function showNotif(message) {
   pendingScream = message;
-  notifBanner.textContent = message;
+  notifBanner.textContent = 'the web calls';
   notifBanner.classList.add('active');
   if (navigator.vibrate) navigator.vibrate([100, 50, 200]);
   sendSystemNotif(message);
