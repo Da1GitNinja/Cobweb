@@ -2,7 +2,7 @@
   "name": "The Cobweb",
   "short_name": "Cobweb",
   "description": "The Malkavian Madness Network",
-  "start_url": "/Cobweb/cobwebnotifications.html",
+  "start_url": "/Cobweb/w-stconnect.html",
   "display": "standalone",
   "background_color": "#06080a",
   "theme_color": "#06080a",
