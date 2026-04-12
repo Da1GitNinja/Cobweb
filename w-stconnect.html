@@ -78,6 +78,23 @@
   object-fit: contain;
   filter: contrast(1.1) brightness(0.9);
 }
+
+ /* ── Countdown ── */
+#countdown {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 50;
+  font-family: 'Uncial Antiqua', serif;
+  font-size: clamp(28px, 6vw, 52px);
+  letter-spacing: 0.15em;
+  color: rgba(180, 200, 220, 0.35);
+  text-shadow: 0 0 20px rgba(140, 180, 255, 0.15);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 2s ease;
+}
+#countdown.active { opacity: 1; }
  
 </style>
 </head>
@@ -87,9 +104,11 @@
 <div id="cursor"></div>
 <div id="sigil">cobweb</div>
 <button id="listen-btn">listen</button>
-
+ 
 <!-- Notification banner stuff -->
 <div id="notif-banner">tap to receive transmission</div>
+ <!-- Countdown -->
+<div id="countdown"></div>
 <!-- Vision flash -->
 <div id="vision-overlay">
   <img id="vision-img" src="" alt="" />
@@ -252,12 +271,13 @@ let screamActive=false, screamDrainAnim=null;
 
 function showScream(message) {
   if(screamActive)return; screamActive=true; screamText.textContent=message;
+  countdownEl.style.visibility = 'hidden';
   screamDrain.style.transition='none'; screamDrain.style.transform='scaleX(1)';
   screamOverlay.classList.add('active');
   requestAnimationFrame(()=>requestAnimationFrame(()=>{ screamDrain.style.transition=`transform ${SCREAM_DURATION_MS}ms linear`; screamDrain.style.transform='scaleX(0)'; }));
   screamDrainAnim=setTimeout(dismissScream,SCREAM_DURATION_MS);
 }
-function dismissScream() { screamOverlay.classList.remove('active'); setTimeout(()=>{screamText.textContent='';screamActive=false;},1300); }
+function dismissScream() { screamOverlay.classList.remove('active'); countdownEl.style.visibility = ''; setTimeout(()=>{screamText.textContent='';screamActive=false;},1300); }
 function handleScreamTap() { if(!screamActive)return; clearTimeout(screamDrainAnim); dismissScream(); }
 screamOverlay.addEventListener('click', handleScreamTap);
 
@@ -409,6 +429,53 @@ function startVisionPoller() {
   pollVision()
   setInterval(pollVision, VISION_POLL_MS)
 }
+
+ // ── Countdown ─────────────────────────────────────────────
+const COUNTDOWN_POLL_MS = 10000
+let countdownTarget = 0
+let countdownInterval = null
+const countdownEl = document.getElementById('countdown')
+
+function updateCountdown() {
+  if (!countdownTarget) return
+  const now = Date.now()
+  const diff = countdownTarget - now
+  if (diff <= 0) {
+    countdownEl.classList.remove('active')
+    countdownTarget = 0
+    clearInterval(countdownInterval)
+    countdownInterval = null
+    return
+  }
+  const h = Math.floor(diff / 3600000)
+  const m = Math.floor((diff % 3600000) / 60000)
+  const s = Math.floor((diff % 60000) / 1000)
+  countdownEl.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+}
+
+function setCountdown(targetTime) {
+  countdownTarget = targetTime
+  if (countdownInterval) clearInterval(countdownInterval)
+  if (!targetTime || targetTime <= Date.now()) return
+  countdownEl.classList.add('active')
+  updateCountdown()
+  countdownInterval = setInterval(updateCountdown, 1000)
+}
+
+function pollCountdown() {
+  fetch(SCRIPT_URL + '?type=countdown&t=' + Date.now())
+    .then(r => r.json())
+    .then(data => {
+      if (!data.targetTime) return
+      if (data.targetTime !== countdownTarget) setCountdown(data.targetTime)
+    })
+    .catch(() => {})
+}
+
+function startCountdownPoller() {
+  pollCountdown()
+  setInterval(pollCountdown, COUNTDOWN_POLL_MS)
+}
  
 // ── startApp ───────────────────────────────────────────────
 function startApp() {
@@ -421,6 +488,7 @@ function startApp() {
   if(IMPORTANT_MESSAGES.length>0) setTimeout(()=>{ spawnImportant(); scheduleNextImportant(); },10000);
   startScreamPoller();
   startVisionPoller();
+  startCountdownPoller()
 }
 
 // ── Boot ───────────────────────────────────────────────────
