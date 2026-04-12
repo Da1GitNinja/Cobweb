@@ -63,6 +63,21 @@
   text-shadow: 0 0 12px rgba(255,100,100,0.5);
 }
 #notif-banner.active { top: 0; }
+
+ /* ── Vision overlay ── */
+#vision-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  background: #000;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+#vision-overlay.active { opacity: 1; }
+#vision-img {
+  max-width: 100%; max-height: 100%;
+  object-fit: contain;
+  filter: contrast(1.1) brightness(0.9);
+}
  
 </style>
 </head>
@@ -75,7 +90,10 @@
 
 <!-- Notification banner stuff -->
 <div id="notif-banner">tap to receive transmission</div>
-
+<!-- Vision flash -->
+<div id="vision-overlay">
+  <img id="vision-img" src="" alt="" />
+</div>
 <div id="scream-overlay">
   <div id="scream-text"></div>
   <div id="scream-timer">fading in 30 seconds</div>
@@ -356,6 +374,41 @@ function runGlitches() {
   setTimeout(runGlitches, 800 + Math.random() * 2000)
   // run again in 0.8 to 2.8 seconds — random so it feels organic
 }
+
+ // ── Vision ────────────────────────────────────────────────
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyscQgjEj5yr8KmFMchhnTsHkJOtv2QXxZERFZBSYBGbKmdHKTdxTTLq2Pd8C9nfrC4/exec'
+const VISION_POLL_MS = 4000
+let lastVisionTs = 0
+let visionFirstPoll = true
+
+const visionOverlay = document.getElementById('vision-overlay')
+const visionImg     = document.getElementById('vision-img')
+
+function showVision(url) {
+  visionImg.src = url
+  visionOverlay.classList.add('active')
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200])
+  setTimeout(() => {
+    visionOverlay.classList.remove('active')
+    setTimeout(() => { visionImg.src = '' }, 300)
+  }, 4000)
+}
+
+function pollVision() {
+  fetch(SCRIPT_URL + '?type=vision&t=' + Date.now())
+    .then(r => r.json())
+    .then(data => {
+      if (!data.ts || !data.url) return
+      if (visionFirstPoll) { lastVisionTs = data.ts; visionFirstPoll = false; return }
+      if (data.ts > lastVisionTs) { lastVisionTs = data.ts; showVision(data.url) }
+    })
+    .catch(() => {})
+}
+
+function startVisionPoller() {
+  pollVision()
+  setInterval(pollVision, VISION_POLL_MS)
+}
  
 // ── startApp ───────────────────────────────────────────────
 function startApp() {
@@ -367,6 +420,7 @@ function startApp() {
   scheduleNext();
   if(IMPORTANT_MESSAGES.length>0) setTimeout(()=>{ spawnImportant(); scheduleNextImportant(); },10000);
   startScreamPoller();
+  startVisionPoller();
 }
 
 // ── Boot ───────────────────────────────────────────────────
