@@ -95,7 +95,14 @@
   transition: opacity 2s ease;
 }
 #countdown.active { opacity: 1; }
- 
+#countdown-label {
+  font-size: clamp(11px, 1.5vw, 14px);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(180, 200, 220, 0.25);
+  text-align: center;
+  margin-top: 10px;
+} 
 </style>
 </head>
 <body>
@@ -108,7 +115,10 @@
 <!-- Notification banner stuff -->
 <div id="notif-banner">tap to receive transmission</div>
  <!-- Countdown -->
-<div id="countdown"></div>
+<div id="countdown">
+  <div id="countdown-time"></div>
+  <div id="countdown-label"></div>
+</div>
 <!-- Vision flash -->
 <div id="vision-overlay">
   <img id="vision-img" src="" alt="" />
@@ -450,14 +460,15 @@ function updateCountdown() {
   const h = Math.floor(diff / 3600000)
   const m = Math.floor((diff % 3600000) / 60000)
   const s = Math.floor((diff % 60000) / 1000)
-  countdownEl.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+  document.getElementById('countdown-time').textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
 }
 
-function setCountdown(targetTime) {
+function setCountdown(targetTime, label) {
   countdownTarget = targetTime
   if (countdownInterval) clearInterval(countdownInterval)
   if (!targetTime || targetTime <= Date.now()) return
   countdownEl.classList.add('active')
+  document.getElementById('countdown-label').textContent = label || ''
   updateCountdown()
   countdownInterval = setInterval(updateCountdown, 1000)
 }
@@ -467,7 +478,7 @@ function pollCountdown() {
     .then(r => r.json())
     .then(data => {
       if (!data.targetTime) return
-      if (data.targetTime !== countdownTarget) setCountdown(data.targetTime)
+      if (data.targetTime !== countdownTarget) setCountdown(data.targetTime, data.label)
     })
     .catch(() => {})
 }
