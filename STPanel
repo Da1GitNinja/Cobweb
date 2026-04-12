@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Cobweb — ST Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Uncial+Antiqua&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #06080a;
+    --surface: #0d1117;
+    --border: rgba(160,180,210,0.12);
+    --red: rgba(190,40,40,0.9);
+    --red-glow: rgba(200,0,0,0.4);
+    --text: rgba(200,215,230,0.8);
+    --text-dim: rgba(140,160,180,0.45);
+    --gold: rgba(220,190,130,0.7);
+  }
+
+  html, body {
+    width: 100%; min-height: 100%;
+    background: var(--bg);
+    font-family: 'Special Elite', monospace;
+    color: var(--text);
+  }
+
+  /* ── Login screen ── */
+  #login-screen {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 20px; background: var(--bg);
+    z-index: 100;
+  }
+  #login-screen h1 {
+    font-family: 'Uncial Antiqua', serif;
+    font-size: 22px; letter-spacing: 0.3em;
+    color: var(--text-dim); text-transform: uppercase;
+  }
+  #login-screen p {
+    font-size: 12px; letter-spacing: 0.2em;
+    color: var(--text-dim); text-transform: uppercase;
+  }
+  #login-input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Special Elite', monospace;
+    font-size: 16px; letter-spacing: 0.1em;
+    padding: 12px 20px; width: 260px;
+    text-align: center; outline: none;
+    border-radius: 2px;
+  }
+  #login-input:focus { border-color: rgba(160,180,210,0.35); }
+  #login-error {
+    font-size: 12px; letter-spacing: 0.15em;
+    color: var(--red); text-transform: uppercase;
+    opacity: 0; transition: opacity 0.3s;
+  }
+  #login-error.show { opacity: 1; }
+
+  /* ── Main panel ── */
+  #panel { display: none; max-width: 600px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  h1.title {
+    font-family: 'Uncial Antiqua', serif;
+    font-size: 18px; letter-spacing: 0.35em;
+    color: var(--text-dim); text-transform: uppercase;
+    text-align: center; margin-bottom: 6px;
+  }
+  .subtitle {
+    text-align: center; font-size: 11px;
+    letter-spacing: 0.25em; color: var(--text-dim);
+    text-transform: uppercase; margin-bottom: 40px;
+  }
+  .role-badge {
+    text-align: center; font-size: 11px;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    margin-bottom: 32px;
+    color: var(--gold);
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .card h2 {
+    font-size: 13px; letter-spacing: 0.25em;
+    text-transform: uppercase; color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+  .card h2 span {
+    font-size: 10px; color: var(--gold);
+    margin-left: 8px;
+  }
+
+  /* ── Inputs ── */
+  textarea, input[type="text"], input[type="datetime-local"], input[type="password"] {
+    width: 100%;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Special Elite', monospace;
+    font-size: 14px;
+    padding: 10px 14px;
+    outline: none;
+    border-radius: 2px;
+    margin-bottom: 12px;
+    letter-spacing: 0.05em;
+  }
+  textarea { resize: vertical; min-height: 80px; }
+  textarea:focus, input:focus { border-color: rgba(160,180,210,0.35); }
+
+  label {
+    display: block; font-size: 11px;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 6px;
+  }
+
+  /* ── Buttons ── */
+  .btn {
+    width: 100%; padding: 14px;
+    font-family: 'Special Elite', monospace;
+    font-size: 13px; letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border: none; border-radius: 2px;
+    cursor: pointer; transition: all 0.2s ease;
+  }
+  .btn-red {
+    background: var(--red);
+    color: #fff;
+    box-shadow: 0 0 20px var(--red-glow);
+  }
+  .btn-red:hover { background: rgba(210,50,50,0.95); }
+  .btn-dim {
+    background: rgba(160,180,210,0.08);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+  .btn-dim:hover { background: rgba(160,180,210,0.14); color: var(--text); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── Feedback toast ── */
+  #toast {
+    position: fixed; bottom: 30px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(20,30,40,0.95);
+    border: 1px solid var(--border);
+    color: var(--text); font-size: 12px;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    padding: 12px 24px; border-radius: 2px;
+    opacity: 0; transition: all 0.3s ease;
+    pointer-events: none; white-space: nowrap;
+    z-index: 999;
+  }
+  #toast.show {
+    opacity: 1; transform: translateX(-50%) translateY(0);
+  }
+  #toast.success { border-color: rgba(40,160,80,0.4); color: rgba(140,220,160,0.9); }
+  #toast.error   { border-color: var(--red); color: rgba(220,120,120,0.9); }
+
+  /* ── Locked overlay for countdown ── */
+  .locked-notice {
+    font-size: 11px; letter-spacing: 0.15em;
+    color: var(--text-dim); text-align: center;
+    padding: 12px; text-transform: uppercase;
+    border: 1px dashed rgba(160,180,210,0.1);
+    border-radius: 2px;
+  }
+
+  .divider {
+    border: none; border-top: 1px solid var(--border);
+    margin: 20px 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Login ── -->
+<div id="login-screen">
+  <h1>The Cobweb</h1>
+  <p>Storyteller Access</p>
+  <input id="login-input" type="password" placeholder="enter passphrase" autocomplete="off" />
+  <div id="login-error">incorrect passphrase</div>
+</div>
+
+<!-- ── Panel ── -->
+<div id="panel">
+  <h1 class="title">The Cobweb</h1>
+  <div class="subtitle">Storyteller Panel</div>
+  <div class="role-badge" id="role-badge">— ST —</div>
+
+  <!-- Broadcast -->
+  <div class="card">
+    <h2>📡 Broadcast to the Web</h2>
+    <label>Message</label>
+    <textarea id="scream-msg" placeholder="what does the web whisper..."></textarea>
+    <button class="btn btn-red" id="scream-btn">Send Transmission</button>
+  </div>
+
+  <!-- Vision -->
+  <div class="card">
+    <h2>👁 Vision Flash</h2>
+    <label>Image URL (Google Drive or Dropbox direct link)</label>
+    <input type="text" id="vision-url" placeholder="https://..." />
+    <button class="btn btn-dim" id="vision-btn">Trigger Vision</button>
+  </div>
+
+  <!-- Countdown — Lead ST only -->
+  <div class="card" id="countdown-card">
+    <h2>⏳ Countdown <span>Lead ST Only</span></h2>
+    <div id="countdown-locked">
+      <div class="locked-notice">enter lead ST passphrase to unlock</div>
+      <hr class="divider">
+      <input type="password" id="lead-pw-input" placeholder="lead ST passphrase" />
+      <button class="btn btn-dim" id="lead-unlock-btn">Unlock</button>
+    </div>
+    <div id="countdown-controls" style="display:none">
+      <label>Target Date & Time</label>
+      <input type="datetime-local" id="countdown-time" />
+      <label>Label (optional)</label>
+      <input type="text" id="countdown-label" placeholder="e.g. the ritual begins" />
+      <button class="btn btn-red" id="countdown-btn">Set Countdown</button>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict'
+
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyscQgjEj5yr8KmFMchhnTsHkJOtv2QXxZERFZBSYBGbKmdHKTdxTTLq2Pd8C9nfrC4/exec'
+
+let currentPassword = ''
+let isLeadST = false
+
+// ── Login ──────────────────────────────────────────────────
+const loginInput  = document.getElementById('login-input')
+const loginError  = document.getElementById('login-error')
+const loginScreen = document.getElementById('login-screen')
+const panel       = document.getElementById('panel')
+const roleBadge   = document.getElementById('role-badge')
+
+async function attemptLogin(password) {
+  // Test the password by sending a dummy request
+  try {
+    const res = await post({ type: 'scream', message: '__ping__', password, _ping: true })
+    if (res.error === 'unauthorized') return false
+    return true
+  } catch {
+    return false
+  }
+}
+
+loginInput.addEventListener('keydown', async e => {
+  if (e.key !== 'Enter') return
+  const pw = loginInput.value.trim()
+  if (!pw) return
+  const ok = await attemptLogin(pw)
+  if (!ok) {
+    loginError.classList.add('show')
+    loginInput.value = ''
+    setTimeout(() => loginError.classList.remove('show'), 2000)
+    return
+  }
+  currentPassword = pw
+  loginScreen.style.display = 'none'
+  panel.style.display = 'block'
+})
+
+// ── Lead ST unlock ─────────────────────────────────────────
+document.getElementById('lead-unlock-btn').addEventListener('click', async () => {
+  const pw = document.getElementById('lead-pw-input').value.trim()
+  if (!pw) return
+  try {
+    const res = await post({ type: 'countdown', targetTime: 0, password: pw, _ping: true })
+    if (res.error && res.error.includes('lead')) {
+      toast('incorrect lead passphrase', 'error')
+      return
+    }
+    isLeadST = true
+    roleBadge.textContent = '— Lead ST —'
+    document.getElementById('countdown-locked').style.display = 'none'
+    document.getElementById('countdown-controls').style.display = 'block'
+    toast('lead ST access granted', 'success')
+  } catch {
+    toast('could not verify', 'error')
+  }
+})
+
+// ── Scream ─────────────────────────────────────────────────
+document.getElementById('scream-btn').addEventListener('click', async () => {
+  const msg = document.getElementById('scream-msg').value.trim()
+  if (!msg) return toast('enter a message first', 'error')
+  const btn = document.getElementById('scream-btn')
+  btn.disabled = true
+  try {
+    await post({ type: 'scream', message: msg, password: currentPassword })
+    document.getElementById('scream-msg').value = ''
+    toast('transmission sent', 'success')
+  } catch {
+    toast('something went wrong', 'error')
+  }
+  btn.disabled = false
+})
+
+// ── Vision ─────────────────────────────────────────────────
+document.getElementById('vision-btn').addEventListener('click', async () => {
+  const url = document.getElementById('vision-url').value.trim()
+  if (!url) return toast('enter an image URL first', 'error')
+  const btn = document.getElementById('vision-btn')
+  btn.disabled = true
+  try {
+    await post({ type: 'vision', url, password: currentPassword })
+    document.getElementById('vision-url').value = ''
+    toast('vision triggered', 'success')
+  } catch {
+    toast('something went wrong', 'error')
+  }
+  btn.disabled = false
+})
+
+// ── Countdown ──────────────────────────────────────────────
+document.getElementById('countdown-btn').addEventListener('click', async () => {
+  const timeVal = document.getElementById('countdown-time').value
+  const label   = document.getElementById('countdown-label').value.trim()
+  if (!timeVal) return toast('pick a date and time first', 'error')
+  const targetTime = new Date(timeVal).getTime()
+  const btn = document.getElementById('countdown-btn')
+  btn.disabled = true
+  try {
+    await post({ type: 'countdown', targetTime, label, password: currentPassword })
+    toast('countdown set', 'success')
+  } catch {
+    toast('something went wrong', 'error')
+  }
+  btn.disabled = false
+})
+
+// ── Helpers ────────────────────────────────────────────────
+async function post(data) {
+  const res = await fetch(SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  })
+  return res.json()
+}
+
+let toastTimer
+function toast(msg, type = '') {
+  const el = document.getElementById('toast')
+  el.textContent = msg
+  el.className = 'show ' + type
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => el.className = '', 3000)
+}
+</script>
+</body>
+</html>
