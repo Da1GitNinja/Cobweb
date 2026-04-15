@@ -249,6 +249,7 @@ listenBtn.addEventListener('click',()=>{
 
 const notifBanner = document.getElementById('notif-banner');
 let pendingScream = null;
+let pendingVision = null;
 
 function showNotif(message) {
   pendingScream = message;
@@ -262,19 +263,39 @@ function showNotif(message) {
     notifSound.play().catch(() => {});
   }
 }
-
+ 
+ function showVisionNotif(url) {
+  pendingVision = url;
+  notifBanner.textContent = 'a vision approaches';
+  notifBanner.classList.add('active');
+  if (navigator.vibrate) navigator.vibrate([100, 50, 200]);
+  sendSystemNotif('a vision approaches');
+  if (NOTIF_SOUND_URL) {
+    const notifSound = new Audio(NOTIF_SOUND_URL);
+    notifSound.volume = 0.6;
+    notifSound.play().catch(() => {});
+  }
+}
 function clearNotif() {
   pendingScream = null;
+ pendingVision = null;
   notifBanner.classList.remove('active');
 }
 
 function handleNotifTap() {
-  if (!pendingScream) return;
-  const msg = pendingScream;
-  clearNotif();
-  showScream(msg);
+  if (pendingScream) {
+    const msg = pendingScream;
+    clearNotif();
+    showScream(msg);
+  } else if (pendingVision) {
+    const url = pendingVision;
+    clearNotif();
+    showVision(url);
+  }
 }
 notifBanner.addEventListener('click', handleNotifTap);
+
+ 
 // ── Scream overlay ─────────────────────────────────────────
 const screamOverlay=document.getElementById('scream-overlay'), screamText=document.getElementById('scream-text'), screamDrain=document.getElementById('scream-drain');
 let screamActive=false, screamDrainAnim=null;
@@ -430,7 +451,7 @@ function pollVision() {
     .then(data => {
       if (!data.ts || !data.url) return
       if (visionFirstPoll) { lastVisionTs = data.ts; visionFirstPoll = false; return }
-      if (data.ts > lastVisionTs) { lastVisionTs = data.ts; showVision(data.url) }
+      if (data.ts > lastVisionTs) { lastVisionTs = data.ts; showVisionNotif(data.url) }
     })
     .catch(() => {})
 }
