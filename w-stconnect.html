@@ -258,11 +258,17 @@ function showNotif(message) {
   if (navigator.vibrate) navigator.vibrate([100, 50, 200]);
   sendSystemNotif(message);
   if (NOTIF_SOUND_URL) {
-const notifSound = new Audio(NOTIF_SOUND_URL);
-notifSound.volume = 0.6;
-notifSound.loop = true;
-notifSound.play().catch(() => {});
-pendingNotifSound = notifSound;  
+    const notifSound = new Audio(NOTIF_SOUND_URL);
+    notifSound.volume = 0.6;
+    notifSound.play().catch(() => {});
+    pendingNotifSound = notifSound;
+    notifSound.addEventListener('ended', () => {
+      if (pendingNotifSound) {
+        setTimeout(() => {
+          if (pendingNotifSound) pendingNotifSound.play().catch(() => {})
+        }, 4000)
+      }
+    })
   }
 }
  
@@ -275,9 +281,15 @@ function showVisionNotif(url) {
   if (NOTIF_SOUND_URL) {
     const notifSound = new Audio(NOTIF_SOUND_URL);
     notifSound.volume = 0.6;
-    notifSound.loop = true;
     notifSound.play().catch(() => {});
     pendingNotifSound = notifSound;
+    notifSound.addEventListener('ended', () => {
+      if (pendingNotifSound) {
+        setTimeout(() => {
+          if (pendingNotifSound) pendingNotifSound.play().catch(() => {})
+        }, 4000)
+      }
+    })
   }
 }
  
