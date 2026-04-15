@@ -249,6 +249,7 @@ listenBtn.addEventListener('click',()=>{
 const notifBanner = document.getElementById('notif-banner');
 let pendingScream = null;
 let pendingVision = null;
+let pendingNotifSound = null;
 
 function showNotif(message) {
   pendingScream = message;
@@ -257,13 +258,15 @@ function showNotif(message) {
   if (navigator.vibrate) navigator.vibrate([100, 50, 200]);
   sendSystemNotif(message);
   if (NOTIF_SOUND_URL) {
-    const notifSound = new Audio(NOTIF_SOUND_URL);
-    notifSound.volume = 0.6;
-    notifSound.play().catch(() => {});
+const notifSound = new Audio(NOTIF_SOUND_URL);
+notifSound.volume = 0.6;
+notifSound.loop = true;
+notifSound.play().catch(() => {});
+pendingNotifSound = notifSound;  
   }
 }
  
- function showVisionNotif(url) {
+function showVisionNotif(url) {
   pendingVision = url;
   notifBanner.textContent = 'a vision approaches';
   notifBanner.classList.add('active');
@@ -272,13 +275,20 @@ function showNotif(message) {
   if (NOTIF_SOUND_URL) {
     const notifSound = new Audio(NOTIF_SOUND_URL);
     notifSound.volume = 0.6;
+    notifSound.loop = true;
     notifSound.play().catch(() => {});
+    pendingNotifSound = notifSound;
   }
 }
+ 
 function clearNotif() {
   pendingScream = null;
  pendingVision = null;
   notifBanner.classList.remove('active');
+  if (pendingNotifSound) {
+    pendingNotifSound.pause();
+    pendingNotifSound = null;
+  }
 }
 
 function handleNotifTap() {
