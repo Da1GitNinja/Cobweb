@@ -68,7 +68,7 @@
 #vision-overlay {
   position: fixed; inset: 0; z-index: 200;
   display: flex; align-items: center; justify-content: center;
-  background: #000;
+  background: radial-gradient(ellipse at center, rgba(0,10,40,1) 0%, rgba(0,0,15,1) 100%);;
   opacity: 0; pointer-events: none;
   transition: opacity 1.2s ease;
 }
@@ -227,6 +227,9 @@ function playNextClip() {
 
 const listenBtn=document.getElementById('listen-btn');
 listenBtn.addEventListener('click',()=>{
+ localStorage.setItem('cobweb_welcomed', '1')
+const hint = document.getElementById('first-hint')
+if (hint) hint.remove()
   audioEnabled=!audioEnabled;
   listenBtn.classList.toggle('audio-on',audioEnabled);
   listenBtn.textContent=audioEnabled?'listening':'listen';
@@ -246,77 +249,55 @@ listenBtn.addEventListener('click',()=>{
 });
 
 
-const notifBanner = document.getElementById('notif-banner');
-let pendingScream = null;
-let pendingVision = null;
-let pendingNotifSound = null;
+const notifBanner = document.getElementById('notif-banner')
+let notifQueue = []
+let pendingNotifSound = null
 
-function showNotif(message) {
-  pendingScream = message;
-  notifBanner.textContent = 'the web calls';
-  notifBanner.classList.add('active');
-  if (navigator.vibrate) navigator.vibrate([100, 50, 200]);
-  sendSystemNotif(message);
+function showNotif(message) { queueNotif('scream', message) }
+function showVisionNotif(url) { queueNotif('vision', url) }
+
+function queueNotif(type, payload) {
+  notifQueue.push({ type, payload })
+  if (notifQueue.length === 1) showNextNotif()
+}
+
+function showNextNotif() {
+  if (!notifQueue.length) return
+  const { type, payload } = notifQueue[0]
+  notifBanner.textContent = type === 'scream' ? 'the web calls' : 'a vision approaches'
+  notifBanner.classList.add('active')
+  if (navigator.vibrate) navigator.vibrate([100, 50, 200])
+  sendSystemNotif(type === 'scream' ? payload : 'a vision approaches')
   if (NOTIF_SOUND_URL) {
-    const notifSound = new Audio(NOTIF_SOUND_URL);
-    notifSound.volume = 0.6;
-    notifSound.play().catch(() => {});
-    pendingNotifSound = notifSound;
+    const notifSound = new Audio(NOTIF_SOUND_URL)
+    notifSound.volume = 0.6
+    notifSound.play().catch(() => {})
+    pendingNotifSound = notifSound
     notifSound.addEventListener('ended', () => {
-      if (pendingNotifSound) {
-        setTimeout(() => {
-          if (pendingNotifSound) pendingNotifSound.play().catch(() => {})
-        }, 4000)
-      }
+      if (pendingNotifSound) setTimeout(() => {
+        if (pendingNotifSound) pendingNotifSound.play().catch(() => {})
+      }, 4000)
     })
   }
 }
- 
-function showVisionNotif(url) {
-  pendingVision = url;
-  notifBanner.textContent = 'a vision approaches';
-  notifBanner.classList.add('active');
-  if (navigator.vibrate) navigator.vibrate([100, 50, 200]);
-  sendSystemNotif('a vision approaches');
-  if (NOTIF_SOUND_URL) {
-    const notifSound = new Audio(NOTIF_SOUND_URL);
-    notifSound.volume = 0.6;
-    notifSound.play().catch(() => {});
-    pendingNotifSound = notifSound;
-    notifSound.addEventListener('ended', () => {
-      if (pendingNotifSound) {
-        setTimeout(() => {
-          if (pendingNotifSound) pendingNotifSound.play().catch(() => {})
-        }, 4000)
-      }
-    })
-  }
-}
- 
+
 function clearNotif() {
-  pendingScream = null;
- pendingVision = null;
-  notifBanner.classList.remove('active');
-  if (pendingNotifSound) {
-    pendingNotifSound.pause();
-    pendingNotifSound = null;
-  }
+  notifQueue.shift()
+  notifBanner.classList.remove('active')
+  if (pendingNotifSound) { pendingNotifSound.pause(); pendingNotifSound = null }
+  if (notifQueue.length > 0) setTimeout(showNextNotif, 600)
 }
 
 function handleNotifTap() {
-  if (pendingScream) {
-    const msg = pendingScream;
-    clearNotif();
-    showScream(msg);
-  } else if (pendingVision) {
-    const url = pendingVision;
-    clearNotif();
-    showVision(url);
-  }
+  if (!notifQueue.length) return
+  const { type, payload } = notifQueue[0]
+  clearNotif()
+  if (type === 'scream') showScream(payload)
+  else showVision(payload)
 }
-notifBanner.addEventListener('click', handleNotifTap);
 
- 
+notifBanner.addEventListener('click', handleNotifTap)
+
 // ── Scream overlay ─────────────────────────────────────────
 const screamOverlay=document.getElementById('scream-overlay'), screamText=document.getElementById('scream-text'), screamDrain=document.getElementById('scream-drain');
 let screamActive=false, screamDrainAnim=null;
@@ -406,6 +387,37 @@ function sendSystemNotif(message) {
     silent: false
   })
 }
+
+ function showFirstTimeHint() {
+  if (localStorage.getItem('cobweb_welcomed')) return
+
+  const el = document.createElement('div')
+  el.id = 'first-hint'
+  el.style.cssText = `
+    position: fixed;
+    bottom: 60px;
+    left: 16px;
+    z-index: 20;
+    font-family: 'Uncial Antiqua', serif;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    color: rgba(140, 180, 210, 0.5);
+    text-transform: uppercase;
+    pointer-events: none;
+    animation: hint-pulse 2.5s ease-in-out infinite;
+  `
+  el.textContent = '↑ open your mind'
+  document.body.appendChild(el)
+
+  const style = document.createElement('style')
+  style.textContent = `
+    @keyframes hint-pulse {
+      0%, 100% { opacity: 0.2; }
+      50% { opacity: 0.7; }
+    }
+  `
+  document.head.appendChild(style)
+}
  
  // ── Glotches ────────────────────────────────────────────
  const GLITCH_CHARS = '█▓░▒#@$%&?!'
@@ -463,11 +475,14 @@ function showVision(url) {
   visionImg.src = url
   visionOverlay.classList.add('active')
   if (navigator.vibrate) navigator.vibrate([200, 100, 200])
-  setTimeout(() => {
-    visionOverlay.classList.remove('active')
-    setTimeout(() => { visionImg.src = '' }, 300)
-  }, 4000)
 }
+
+function dismissVision() {
+  visionOverlay.classList.remove('active')
+  setTimeout(() => { visionImg.src = '' }, 1200)
+}
+
+visionOverlay.addEventListener('click', dismissVision)
 
 function pollVision() {
   fetch(SCRIPT_URL + '?type=vision&t=' + Date.now())
@@ -545,6 +560,7 @@ function startApp() {
   startScreamPoller();
   startVisionPoller();
   startCountdownPoller()
+  showFirstTimeHint()
 }
 
 // ── Boot ───────────────────────────────────────────────────
