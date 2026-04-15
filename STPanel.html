@@ -227,6 +227,7 @@
       <label>Label (optional)</label>
       <input type="text" id="countdown-label" placeholder="e.g. the ritual begins" />
       <button class="btn btn-red" id="countdown-btn">Set Countdown</button>
+      <button class="btn btn-dim" id="countdown-clear-btn" style="margin-top:10px">Clear Countdown</button>
     </div>
   </div>
 
@@ -338,7 +339,9 @@ document.getElementById('countdown-btn').addEventListener('click', async () => {
   btn.disabled = true
   try {
     await post({ type: 'countdown', targetTime, label, password: currentPassword })
-    toast('countdown set', 'success')
+    const d = new Date(targetTime)
+const friendly = d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })
+toast(`countdown set · ${friendly}`, 'success')
   } catch {
     toast('something went wrong', 'error')
   }
@@ -346,6 +349,19 @@ document.getElementById('countdown-btn').addEventListener('click', async () => {
 })
 
 // ── Helpers ────────────────────────────────────────────────
+
+ document.getElementById('countdown-clear-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('countdown-clear-btn')
+  btn.disabled = true
+  try {
+    await post({ type: 'countdown', targetTime: 0, label: '', password: currentPassword })
+    toast('countdown cleared', 'success')
+  } catch {
+    toast('something went wrong', 'error')
+  }
+  btn.disabled = false
+})
+
 async function post(data) {
   const res = await fetch(SCRIPT_URL, {
     method: 'POST',
