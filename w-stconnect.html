@@ -474,12 +474,14 @@ const visionImg     = document.getElementById('vision-img')
 function showVision(url) {
   visionImg.src = url
   visionOverlay.classList.add('active')
+  visionOverlay.style.pointerEvents = 'all'
   if (navigator.vibrate) navigator.vibrate([200, 100, 200])
 }
 
 function dismissVision() {
   visionOverlay.classList.remove('active')
-  setTimeout(() => { visionImg.src = '' }, 1200)
+  visionOverlay.style.pointerEvents = 'none'
+  setTimeout(() => { visionImg.src = '' }, 400)
 }
 
 visionOverlay.addEventListener('click', dismissVision)
