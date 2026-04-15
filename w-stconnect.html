@@ -594,6 +594,7 @@ document.addEventListener('touchend', e => {
   // don't spawn message if tapping the orb or scream overlay
   if (e.target.closest('#notif-banner')) return
   if (e.target.closest('#scream-overlay')) return
+ if (e.target.closest('#vision-overlay')) return 
   spawnMessage()
 }, {passive: true})
 
