@@ -132,7 +132,6 @@
 'use strict';
 
 const SHEET_CSV_URL  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGPc7hKXGZ1FKR8E0Vnks6W0NdTVB00eaR6C4Tqi_cqVSwOLZYwIjs1yeCym_p3se6kN7JyVqc5ZXp/pub?gid=0&single=true&output=csv';
-const SCREAM_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGPc7hKXGZ1FKR8E0Vnks6W0NdTVB00eaR6C4Tqi_cqVSwOLZYwIjs1yeCym_p3se6kN7JyVqc5ZXp/pub?gid=294049500&single=true&output=csv';
 const AUDIO_CSV_URL  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGPc7hKXGZ1FKR8E0Vnks6W0NdTVB00eaR6C4Tqi_cqVSwOLZYwIjs1yeCym_p3se6kN7JyVqc5ZXp/pub?gid=2041856543&single=true&output=csv';
 
 const SCREAM_DURATION_MS = 30000;
@@ -316,19 +315,22 @@ screamOverlay.addEventListener('click', handleScreamTap);
 let screamFirstPoll=true, lastScreamTs=0;
 
 function pollScream() {
-  if(!SCREAM_CSV_URL||SCREAM_CSV_URL==='YOUR_SCREAM_TAB_CSV_URL_HERE')return;
-  fetch(SCREAM_CSV_URL+'&t='+Date.now()).then(r=>r.text()).then(text=>{
-    const rows=text.trim().split('\n'); if(!rows[0])return;
-    const cols=rows[0].split(/,(.+)/).map(c=>c.replace(/^"|"$/g,'').trim());
-    const ts=parseInt(cols[0],10), msg=cols[1]||''; if(!ts||!msg)return;
-    if(screamFirstPoll){ lastScreamTs=ts; screamFirstPoll=false; return; }
-    if(ts>lastScreamTs){ lastScreamTs=ts; showNotif(msg); }   // ← notif, not direct show
-  }).catch(()=>{});
+  fetch(SCRIPT_URL + '?type=scream&t=' + Date.now())
+    .then(r => r.json())
+    .then(data => {
+      if (!data.ts || !data.message) return
+      if (screamFirstPoll) { lastScreamTs = data.ts; screamFirstPoll = false; return }
+      if (data.ts > lastScreamTs) { lastScreamTs = data.ts; showNotif(data.message) }
+    })
+    .catch(() => {})
 }
 
-function startScreamPoller() { if(!SCREAM_CSV_URL||SCREAM_CSV_URL==='YOUR_SCREAM_TAB_CSV_URL_HERE')return; pollScream(); setInterval(pollScream,SCREAM_POLL_MS); }
+function startScreamPoller() {
+  pollScream()
+  setInterval(pollScream, SCREAM_POLL_MS)
+}
 
-// ── CSV parsers ────────────────────────────────────────────
+ // ── CSV parsers ────────────────────────────────────────────
 function parseCSV(text) {
   const rows=text.trim().split('\n'), regular=[], important=[];
   for(const row of rows){
