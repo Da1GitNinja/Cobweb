@@ -212,21 +212,33 @@ function scheduleNextImportant() { setTimeout(()=>{ spawnImportant(); scheduleNe
 function scheduleNext() { setTimeout(()=>{ spawnMessage(); scheduleNext(); },800+Math.random()*2700); }
 
 // ── Audio engine ───────────────────────────────────────────
-let audioEnabled=false, shuffledIds=[], currentAudio=null, ambientAudio=null;
+let audioEnabled=false, shuffledIds=[], currentAudio=null, ambientAudio=null, iosUnlockedAudio=null, iosNotifAudio=null;
 function shuffle(arr) { const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a; }
 function nextFileId() { if(!shuffledIds.length)shuffledIds=shuffle(AUDIO_FILE_IDS); return shuffledIds.pop(); }
 function driveUrl(id) { return id; }
 function playNextClip() {
   if(!audioEnabled||!AUDIO_FILE_IDS.length)return;
   const id=nextFileId(); if(!id)return;
-  if(currentAudio){currentAudio.pause();currentAudio.src='';currentAudio=null;}
-  const audio=new Audio(driveUrl(id)); audio.volume=AUDIO_VOLUME; currentAudio=audio;
-  audio.play().catch(()=>{});
+ if(currentAudio){currentAudio.pause();currentAudio.src='';currentAudio=null;}
+const audio = iosUnlockedAudio || new Audio();
+audio.src = driveUrl(id); audio.volume=AUDIO_VOLUME; currentAudio=audio;
+audio.play().catch(()=>{});
   setTimeout(()=>{ if(audioEnabled)playNextClip(); },AUDIO_MIN_GAP_MS+Math.random()*(AUDIO_MAX_GAP_MS-AUDIO_MIN_GAP_MS));
 }
 
 const listenBtn=document.getElementById('listen-btn');
 listenBtn.addEventListener('click',()=>{
+ if (!iosUnlockedAudio) {
+  iosUnlockedAudio = new Audio();
+  iosUnlockedAudio.play().catch(() => {});
+}
+if (!iosNotifAudio && NOTIF_SOUND_URL) {
+  iosNotifAudio = new Audio(NOTIF_SOUND_URL);
+  iosNotifAudio.volume = 0.6;
+  iosNotifAudio.play().catch(() => {});
+  iosNotifAudio.pause();
+  iosNotifAudio.currentTime = 0;
+}
  localStorage.setItem('cobweb_welcomed', '1')
 const hint = document.getElementById('first-hint')
 if (hint) hint.remove()
@@ -268,19 +280,20 @@ function showNextNotif() {
   notifBanner.classList.add('active')
   if (navigator.vibrate) navigator.vibrate([100, 50, 200])
   sendSystemNotif(type === 'scream' ? payload : 'a vision approaches')
-  if (NOTIF_SOUND_URL) {
-    const notifSound = new Audio(NOTIF_SOUND_URL)
+if (iosNotifAudio || NOTIF_SOUND_URL) {
+    const notifSound = iosNotifAudio || new Audio(NOTIF_SOUND_URL)
+    notifSound.currentTime = 0
     notifSound.volume = 0.6
     notifSound.play().catch(() => {})
     pendingNotifSound = notifSound
     notifSound.addEventListener('ended', () => {
       if (pendingNotifSound) setTimeout(() => {
-        if (pendingNotifSound) pendingNotifSound.play().catch(() => {})
+        if (pendingNotifSound) { pendingNotifSound.currentTime = 0; pendingNotifSound.play().catch(() => {}) }
       }, 4000)
     })
   }
 }
-
+ 
 function clearNotif() {
   notifQueue.shift()
   notifBanner.classList.remove('active')
