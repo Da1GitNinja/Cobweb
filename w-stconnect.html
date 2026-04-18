@@ -480,6 +480,7 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyscQgjEj5yr8KmFMchh
 const VISION_POLL_MS = 4000
 let lastVisionTs = 0
 let visionFirstPoll = true
+let visionDismissTimer = null
 
 const visionOverlay = document.getElementById('vision-overlay')
 const visionImg     = document.getElementById('vision-img')
@@ -489,9 +490,12 @@ function showVision(url) {
   visionOverlay.classList.add('active')
   visionOverlay.style.pointerEvents = 'all'
   if (navigator.vibrate) navigator.vibrate([200, 100, 200])
+  if (visionDismissTimer) clearTimeout(visionDismissTimer)
+  visionDismissTimer = setTimeout(dismissVision, SCREAM_DURATION_MS)
 }
 
 function dismissVision() {
+  if (visionDismissTimer) { clearTimeout(visionDismissTimer); visionDismissTimer = null }
   visionOverlay.classList.remove('active')
   visionOverlay.style.pointerEvents = 'none'
   setTimeout(() => { visionImg.src = '' }, 400)
