@@ -187,7 +187,20 @@
   <h1>The Cobweb</h1>
   <p>Storyteller Access</p>
   <input id="login-input" type="password" placeholder="enter passphrase" autocomplete="off" />
-  <div id="login-error">incorrect passphrase</div>
+<button id="login-btn" style="
+  background: rgba(160,180,210,0.08);
+  border: 1px solid rgba(160,180,210,0.12);
+  color: rgba(140,160,180,0.45);
+  font-family: 'Special Elite', monospace;
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 12px 40px;
+  cursor: pointer;
+  border-radius: 2px;
+  width: 260px;
+">enter</button>
+<div id="login-error">incorrect passphrase</div>
 </div>
 
 <!-- ── Panel ── -->
@@ -274,9 +287,7 @@ async function attemptLogin(password) {
   }
 }
 
-loginInput.addEventListener('keydown', async e => {
-  if (e.key !== 'Enter') return
-  const pw = loginInput.value.trim()
+async function doLogin(pw) {
   if (!pw) return
   const ok = await attemptLogin(pw)
   if (!ok) {
@@ -288,6 +299,15 @@ loginInput.addEventListener('keydown', async e => {
   currentPassword = pw
   loginScreen.style.display = 'none'
   panel.style.display = 'block'
+}
+
+loginInput.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return
+  doLogin(loginInput.value.trim())
+})
+
+document.getElementById('login-btn').addEventListener('click', () => {
+  doLogin(loginInput.value.trim())
 })
 
 // ── Lead ST unlock ─────────────────────────────────────────
