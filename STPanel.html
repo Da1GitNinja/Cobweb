@@ -314,6 +314,9 @@ document.getElementById('login-btn').addEventListener('click', () => {
 document.getElementById('lead-unlock-btn').addEventListener('click', async () => {
   const pw = document.getElementById('lead-pw-input').value.trim()
   if (!pw) return
+  const btn = document.getElementById('lead-unlock-btn')
+  btn.disabled = true
+  btn.classList.replace('btn-dim', 'btn-red')
   try {
     const res = await post({ type: 'countdown', targetTime: 0, password: pw, _ping: true })
     if (res.error && res.error.includes('lead')) {
@@ -328,6 +331,8 @@ document.getElementById('lead-unlock-btn').addEventListener('click', async () =>
   } catch {
     toast('could not verify', 'error')
   }
+  btn.disabled = false
+  btn.classList.replace('btn-red', 'btn-dim')
 })
 
 // ── Scream ─────────────────────────────────────────────────
@@ -371,6 +376,7 @@ document.getElementById('vision-btn').addEventListener('click', async () => {
   if (!url) return toast('enter an image URL first', 'error')
   const btn = document.getElementById('vision-btn')
   btn.disabled = true
+  btn.classList.replace('btn-dim', 'btn-red')
   try {
     await post({ type: 'vision', url, password: currentPassword })
     document.getElementById('vision-url').value = ''
@@ -379,6 +385,7 @@ document.getElementById('vision-btn').addEventListener('click', async () => {
     toast('something went wrong', 'error')
   }
   btn.disabled = false
+  btn.classList.replace('btn-red', 'btn-dim')
 })
 
 // ── Countdown ──────────────────────────────────────────────
@@ -401,10 +408,10 @@ toast(`countdown set · ${friendly}`, 'success')
 })
 
 // ── Helpers ────────────────────────────────────────────────
-
- document.getElementById('countdown-clear-btn').addEventListener('click', async () => {
+document.getElementById('countdown-clear-btn').addEventListener('click', async () => {
   const btn = document.getElementById('countdown-clear-btn')
   btn.disabled = true
+  btn.classList.replace('btn-dim', 'btn-red')
   try {
     await post({ type: 'countdown', targetTime: 0, label: '', password: currentPassword })
     toast('countdown cleared', 'success')
@@ -412,6 +419,7 @@ toast(`countdown set · ${friendly}`, 'success')
     toast('something went wrong', 'error')
   }
   btn.disabled = false
+  btn.classList.replace('btn-red', 'btn-dim')
 })
 
 async function post(data) {
