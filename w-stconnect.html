@@ -47,10 +47,11 @@
 #echoes-btn {
   position: fixed;
   bottom: 22px;
-  left: 120px;
+  left: 50%;
+transform: translateX(-50%);
   z-index: 10;
   font-family: 'Uncial Antiqua', serif;
-  font-size: 14px;
+  font-size: 24px;
   letter-spacing: 0.3em;
   text-transform: uppercase;
   color: rgba(140, 160, 180, 0.3);
@@ -105,7 +106,7 @@
 #echoes-panel {
   position: fixed;
   bottom: 70px;
-  left: 16px;
+  left: 50%;
   z-index: 50;
   width: min(340px, calc(100vw - 32px));
   padding: 20px 22px calc(20px + env(safe-area-inset-bottom, 0px)) 22px;
@@ -120,13 +121,13 @@
   max-height: 60vh;
   opacity: 0;
   pointer-events: none;
-  transform: translateY(8px);
+  transform: translateX(-50%) translateY(8px);
   transition: opacity 0.35s ease, transform 0.35s ease;
 }
 #echoes-panel.active {
   opacity: 1;
   pointer-events: all;
-  transform: translateY(0);
+  transform: translateX(-50%) translateY(0);
 }
 #echoes-title {
   font-family: 'Uncial Antiqua', serif;
