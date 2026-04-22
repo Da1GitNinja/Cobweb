@@ -269,6 +269,20 @@ document.getElementById('scream-msg').addEventListener('input', () => {
 let currentPassword = ''
 let isLeadST = false
 
+// ── Session restore ────────────────────────────────────────
+const savedPw = sessionStorage.getItem('cobweb_st_pw')
+if (savedPw) {
+  attemptLogin(savedPw).then(ok => {
+    if (ok) {
+      currentPassword = savedPw
+      loginScreen.style.display = 'none'
+      panel.style.display = 'block'
+    } else {
+      sessionStorage.removeItem('cobweb_st_pw')
+    }
+  })
+}
+
 // ── Login ──────────────────────────────────────────────────
 const loginInput  = document.getElementById('login-input')
 const loginError  = document.getElementById('login-error')
@@ -296,7 +310,8 @@ async function doLogin(pw) {
     setTimeout(() => loginError.classList.remove('show'), 2000)
     return
   }
-  currentPassword = pw
+ currentPassword = pw
+  sessionStorage.setItem('cobweb_st_pw', pw)
   loginScreen.style.display = 'none'
   panel.style.display = 'block'
 }
