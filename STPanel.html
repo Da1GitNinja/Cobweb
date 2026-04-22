@@ -200,7 +200,8 @@
   <div class="card">
     <h2>📡 Broadcast to the Web</h2>
     <label>Message</label>
-    <textarea id="scream-msg" placeholder="what does the web whisper..."></textarea>
+   <textarea id="scream-msg" placeholder="what does the web whisper..." maxlength="240"></textarea>
+<div id="scream-counter" style="text-align:right; font-size:11px; letter-spacing:0.15em; color:rgba(140,160,180,0.35); margin-top:-8px; margin-bottom:12px;">240</div>
     <button class="btn btn-red" id="scream-btn">Send Transmission</button>
   </div>
 
@@ -240,6 +241,18 @@
 
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyscQgjEj5yr8KmFMchhnTsHkJOtv2QXxZERFZBSYBGbKmdHKTdxTTLq2Pd8C9nfrC4/exec'
 
+ // ── Character counter ──────────────────────────────────────
+document.getElementById('scream-msg').addEventListener('input', () => {
+  const remaining = 240 - document.getElementById('scream-msg').value.length
+  const counter = document.getElementById('scream-counter')
+  counter.textContent = remaining
+  counter.style.color = remaining < 40
+    ? 'rgba(200,80,80,0.7)'
+    : remaining < 80
+    ? 'rgba(220,190,130,0.6)'
+    : 'rgba(140,160,180,0.35)'
+})
+ 
 let currentPassword = ''
 let isLeadST = false
 
@@ -298,6 +311,9 @@ document.getElementById('lead-unlock-btn').addEventListener('click', async () =>
 })
 
 // ── Scream ─────────────────────────────────────────────────
+const SCREAM_COOLDOWN_S = 8
+let screamCooldownTimer = null
+
 document.getElementById('scream-btn').addEventListener('click', async () => {
   const msg = document.getElementById('scream-msg').value.trim()
   if (!msg) return toast('enter a message first', 'error')
@@ -306,11 +322,27 @@ document.getElementById('scream-btn').addEventListener('click', async () => {
   try {
     await post({ type: 'scream', message: msg, password: currentPassword })
     document.getElementById('scream-msg').value = ''
+    document.getElementById('scream-counter').textContent = '240'
+    document.getElementById('scream-counter').style.color = 'rgba(140,160,180,0.35)'
     toast('transmission sent', 'success')
+    // Start cooldown
+    let remaining = SCREAM_COOLDOWN_S
+    btn.textContent = `wait · ${remaining}s`
+    screamCooldownTimer = setInterval(() => {
+      remaining--
+      if (remaining <= 0) {
+        clearInterval(screamCooldownTimer)
+        btn.disabled = false
+        btn.textContent = 'Send Transmission'
+      } else {
+        btn.textContent = `wait · ${remaining}s`
+      }
+    }, 1000)
   } catch {
     toast('something went wrong', 'error')
+    btn.disabled = false
+    btn.textContent = 'Send Transmission'
   }
-  btn.disabled = false
 })
 
 // ── Vision ─────────────────────────────────────────────────
