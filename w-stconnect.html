@@ -38,7 +38,7 @@
   #scream-timer { font-family: 'Uncial Antiqua',serif; font-size: 11px; letter-spacing: 0.4em; color: rgba(200,80,80,0.4); text-transform: uppercase; opacity: 0; transition: opacity 0.5s ease 1s; }
   #scream-overlay.active #scream-timer { opacity: 1; }
   #scream-drain { position: absolute; bottom: 0; left: 0; height: 3px; width: 100%; background: linear-gradient(90deg,rgba(220,0,0,0.9) 0%,rgba(180,0,0,0.6) 100%); transform-origin: left; transform: scaleX(1); }
-  #sigil { position: fixed; bottom: 22px; right: 24px; z-index: 10; font-family: 'Uncial Antiqua',serif; font-size: 11px; letter-spacing: 0.3em; color: rgba(140,160,180,0.2); text-transform: uppercase; pointer-events: none; }
+  #sigil { position: fixed; top: 18px; right: 24px; z-index: 10; font-family: 'Uncial Antiqua',serif; font-size: 11px; letter-spacing: 0.3em; color: rgba(140,160,180,0.2); text-transform: uppercase; pointer-events: none; }
   #listen-btn { position: fixed; bottom: 22px; left: 24px; z-index: 10; font-family: 'Uncial Antiqua',serif; font-size: 24px; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(140,160,180,0.3); background: none; border: none; cursor: pointer; padding: 14px 8px; transition: color 0.6s ease; user-select: none; touch-action: manipulation; }  #listen-btn:hover { color: rgba(160,200,230,0.65); }
   #listen-btn.audio-on { color: rgba(160,200,230,0.55); text-shadow: 0 0 10px rgba(140,190,255,0.9),0 0 25px rgba(140,190,255,0.6),0 0 50px rgba(140,190,255,0.3); }
   #listen-btn.audio-on::before { content: '·'; margin-right: 6px; animation: pulse-dot 2s ease-in-out infinite; }
@@ -246,6 +246,136 @@ transform: translateX(-50%);
   text-align: center;
   margin-top: 10px;
 } 
+ /* ── Attune Button ── */
+#attune-btn {
+  position: fixed;
+  bottom: 22px;
+  right: 24px;
+  z-index: 10;
+  font-family: 'Uncial Antiqua', serif;
+  font-size: 24px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(140, 160, 180, 0);
+  background: none;
+  border: none;
+  min-width: 64px;
+  min-height: 44px;
+  padding: 14px 8px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  cursor: pointer;
+  user-select: none;
+  pointer-events: none;
+  transition: color 1.2s ease, text-shadow 0.6s ease;
+}
+#attune-btn.visible {
+  color: rgba(140, 160, 180, 0.3);
+  pointer-events: all;
+}
+#attune-btn.active {
+  color: rgba(200, 165, 80, 0.8);
+  text-shadow:
+    0 0 10px rgba(220, 180, 80, 0.45),
+    0 0 28px rgba(200, 140, 40, 0.2);
+}
+
+/* ── Attune Backdrop ── */
+#attune-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+#attune-backdrop.active { display: block; }
+
+/* ── Attune Panel ── */
+#attune-panel {
+  position: fixed;
+  bottom: 70px;
+  right: 16px;
+  z-index: 50;
+  width: min(270px, calc(100vw - 32px));
+  padding: 20px 22px;
+  background: rgba(6, 4, 12, 0.94);
+  border: 1px solid rgba(200, 160, 80, 0.12);
+  box-shadow:
+    0 0 40px rgba(160, 110, 20, 0.08),
+    inset 0 0 20px rgba(0, 0, 0, 0.3);
+  font-family: 'Special Elite', monospace;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+#attune-panel.active {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateY(0);
+}
+#attune-title {
+  font-family: 'Uncial Antiqua', serif;
+  font-size: 11px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: rgba(200, 160, 80, 0.35);
+  margin-bottom: 18px;
+  border-bottom: 1px solid rgba(200, 160, 80, 0.1);
+  padding-bottom: 10px;
+}
+.attune-row { margin-bottom: 18px; }
+.attune-row:last-child { margin-bottom: 0; }
+.attune-label {
+  display: block;
+  font-family: 'Uncial Antiqua', serif;
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(200, 160, 80, 0.5);
+  margin-bottom: 2px;
+}
+.attune-sublabel {
+  display: block;
+  font-size: 11px;
+  color: rgba(160, 150, 130, 0.3);
+  letter-spacing: 0.08em;
+  margin-bottom: 9px;
+  font-style: italic;
+}
+
+/* ── Thread sliders ── */
+.attune-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 1px;
+  background: rgba(200, 160, 80, 0.18);
+  outline: none;
+  border: none;
+  cursor: pointer;
+  display: block;
+}
+.attune-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(210, 175, 95, 0.85);
+  box-shadow: 0 0 8px rgba(200, 160, 60, 0.65), 0 0 18px rgba(180, 130, 40, 0.3);
+  cursor: pointer;
+}
+.attune-slider::-moz-range-thumb {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(210, 175, 95, 0.85);
+  box-shadow: 0 0 8px rgba(200, 160, 60, 0.65);
+  border: none;
+  cursor: pointer;
+}
+ 
 </style>
 </head>
 <body>
@@ -264,6 +394,29 @@ transform: translateX(-50%);
 </div>
 
 <div id="echoes-backdrop"></div>
+
+ <button id="attune-btn" aria-label="Attune audio levels">attune</button>
+
+<div id="attune-panel" role="dialog" aria-label="Audio levels">
+  <div id="attune-title">attune the signal</div>
+  <div class="attune-row">
+    <label class="attune-label">ambient</label>
+    <span class="attune-sublabel">the world beneath</span>
+    <input class="attune-slider" id="vol-ambient" type="range" min="0" max="1" step="0.01">
+  </div>
+  <div class="attune-row">
+    <label class="attune-label">voices</label>
+    <span class="attune-sublabel">the signal</span>
+    <input class="attune-slider" id="vol-voices" type="range" min="0" max="1" step="0.01">
+  </div>
+  <div class="attune-row">
+    <label class="attune-label">signals</label>
+    <span class="attune-sublabel">the call</span>
+    <input class="attune-slider" id="vol-signals" type="range" min="0" max="1" step="0.01">
+  </div>
+</div>
+
+<div id="attune-backdrop"></div>
  
 <!-- Notification banner stuff -->
 <div id="notif-banner">tap to receive transmission</div>
@@ -289,12 +442,13 @@ const AUDIO_CSV_URL  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGPc7hK
 
 const SCREAM_DURATION_MS = 30000;
 const SCREAM_POLL_MS     = 3000;
-const AUDIO_VOLUME       = 0.18;
 const AUDIO_MIN_GAP_MS   = 10000;
 const AUDIO_MAX_GAP_MS   = 15000;
 const AMBIENT_URL = '/Cobweb/audio/Ambientlong.mp3';
-const AMBIENT_VOLUME = 0.5;
 const NOTIF_SOUND_URL = 'https://www.dropbox.com/scl/fi/3bc5wshigba9axgs37306/102308_1306869-lq.mp3?rlkey=b9y9uo999h6fp4gkn1r3htr33&st=6wcw4swl&raw=1';
+let AUDIO_VOLUME   = parseFloat(localStorage.getItem('cobweb_vol_voices')  ?? '0.18');
+let AMBIENT_VOLUME = parseFloat(localStorage.getItem('cobweb_vol_ambient') ?? '0.50');
+let NOTIF_VOLUME   = parseFloat(localStorage.getItem('cobweb_vol_signals') ?? '0.60');
  
 let MESSAGES           = ["the signal is lost","no messages found","the feed is empty","waiting for transmission","this is a test"];
 let IMPORTANT_MESSAGES = ["connection failed"];
@@ -387,7 +541,7 @@ listenBtn.addEventListener('click',()=>{
 }
 if (!iosNotifAudio && NOTIF_SOUND_URL) {
   iosNotifAudio = new Audio(NOTIF_SOUND_URL);
-  iosNotifAudio.volume = 0.6;
+  iosNotifAudio.volume = NOTIF_VOLUME
   iosNotifAudio.play().catch(() => {});
   iosNotifAudio.pause();
   iosNotifAudio.currentTime = 0;
@@ -397,6 +551,8 @@ const hint = document.getElementById('first-hint')
 if (hint) hint.remove()
   audioEnabled=!audioEnabled;
   listenBtn.classList.toggle('audio-on',audioEnabled);
+ attuneBtn.classList.toggle('visible', audioEnabled);
+if (!audioEnabled) closeAttune();
   listenBtn.textContent=audioEnabled?'listening':'listen';
  requestNotifPermission()
   if(audioEnabled){
@@ -446,7 +602,7 @@ function showNextNotif() {
 if (iosNotifAudio || NOTIF_SOUND_URL) {
     const notifSound = iosNotifAudio || new Audio(NOTIF_SOUND_URL)
     notifSound.currentTime = 0
-    notifSound.volume = 0.6
+    notifSound.volume = NOTIF_VOLUME
     notifSound.play().catch(() => {})
     pendingNotifSound = notifSound
     notifSound.addEventListener('ended', () => {
@@ -813,6 +969,53 @@ function toggleEchoes() {
 
 echoesBtn.addEventListener('click', toggleEchoes)
 echoesBackdrop.addEventListener('click', closeEchoes)
+
+ // ── Attune Panel ───────────────────────────────────────────
+const attuneBtn      = document.getElementById('attune-btn')
+const attunePanel    = document.getElementById('attune-panel')
+const attuneBackdrop = document.getElementById('attune-backdrop')
+
+const volAmbientSlider = document.getElementById('vol-ambient')
+const volVoicesSlider  = document.getElementById('vol-voices')
+const volSignalsSlider = document.getElementById('vol-signals')
+
+volAmbientSlider.value = AMBIENT_VOLUME
+volVoicesSlider.value  = AUDIO_VOLUME
+volSignalsSlider.value = NOTIF_VOLUME
+
+volAmbientSlider.addEventListener('input', () => {
+  AMBIENT_VOLUME = parseFloat(volAmbientSlider.value)
+  if (ambientAudio) ambientAudio.volume = AMBIENT_VOLUME
+  localStorage.setItem('cobweb_vol_ambient', AMBIENT_VOLUME)
+})
+volVoicesSlider.addEventListener('input', () => {
+  AUDIO_VOLUME = parseFloat(volVoicesSlider.value)
+  if (currentAudio) currentAudio.volume = AUDIO_VOLUME
+  localStorage.setItem('cobweb_vol_voices', AUDIO_VOLUME)
+})
+volSignalsSlider.addEventListener('input', () => {
+  NOTIF_VOLUME = parseFloat(volSignalsSlider.value)
+  if (iosNotifAudio) iosNotifAudio.volume = NOTIF_VOLUME
+  if (pendingNotifSound) pendingNotifSound.volume = NOTIF_VOLUME
+  localStorage.setItem('cobweb_vol_signals', NOTIF_VOLUME)
+})
+
+function openAttune()  {
+  attunePanel.classList.add('active')
+  attuneBackdrop.classList.add('active')
+  attuneBtn.classList.add('active')
+}
+function closeAttune() {
+  attunePanel.classList.remove('active')
+  attuneBackdrop.classList.remove('active')
+  attuneBtn.classList.remove('active')
+}
+function toggleAttune() {
+  attunePanel.classList.contains('active') ? closeAttune() : openAttune()
+}
+
+attuneBtn.addEventListener('click', toggleAttune)
+attuneBackdrop.addEventListener('click', closeAttune)
  
 // ── startApp ───────────────────────────────────────────────
 function startApp() {
@@ -863,6 +1066,9 @@ document.addEventListener('click', e => {
   if (e.target.closest('#notif-banner')) return
   if (e.target.closest('#scream-overlay')) return
   if (e.target.closest('#vision-overlay')) return
+ if (e.target.closest('#attune-btn')) return
+  if (e.target.closest('#attune-panel')) return
+  if (e.target.closest('#attune-backdrop')) return
   spawnMessage()
 })
 
