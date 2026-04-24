@@ -354,9 +354,6 @@
 
 <div id="toast"></div>
 
-<!-- ── QR Code Library ── -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
 <script>
 'use strict'
 
@@ -509,16 +506,13 @@ document.getElementById('forge-btn').addEventListener('click', () => {
   emptyState.style.display = 'none'
   qrGrid.appendChild(card)
 
-  // Generate QR code inside the wrapper
-  new QRCode(qrEl, {
-    text: screamUrl,
-    width: 180,
-    height: 180,
-    colorDark: '#000000',
-    colorLight: '#ffffff',
-    correctLevel: QRCode.CorrectLevel.H
-  })
-
+// Generate QR code via API — handles all characters reliably
+const qrImg = document.createElement('img')
+qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(screamUrl)
+qrImg.width = 180
+qrImg.height = 180
+qrImg.alt = 'QR code'
+qrEl.appendChild(qrImg)
   // Reset inputs
   qrLabelInput.value = ''
   qrMsgInput.value = ''
