@@ -375,6 +375,32 @@ transform: translateX(-50%);
   border: none;
   cursor: pointer;
 }
+
+@media (max-width: 480px) {
+  /* Shrink all three bottom buttons */
+  #listen-btn,
+  #echoes-btn,
+  #attune-btn {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    padding: 10px 6px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Tighten horizontal anchors so they don't bleed inward */
+  #listen-btn  { left: 14px; }
+  #attune-btn  { right: 14px; }
+
+  /* Messages: narrower, fewer words per line */
+  .msg {
+    max-width: min(260px, 72vw);
+  }
+  .msg.size-xl { font-size: 18px; }
+  .msg.size-lg { font-size: 15px; }
+  .msg.size-md { font-size: 13px; }
+  .msg.size-sm { font-size: 12px; }
+}
  
 </style>
 </head>
@@ -1021,9 +1047,10 @@ attuneBackdrop.addEventListener('click', closeAttune)
 function startApp() {
   resizeWeb();
   runGlitches()
-  setTimeout(()=>spawnMessage(),200);
-  setTimeout(()=>spawnMessage(),900);
-  setTimeout(()=>spawnMessage(),1600);
+  const isMobile = window.innerWidth < 480;
+  setTimeout(() => spawnMessage(), 200);
+  if (!isMobile) setTimeout(() => spawnMessage(), 900);
+  setTimeout(() => spawnMessage(), isMobile ? 1400 : 1600);
   scheduleNext();
   if(IMPORTANT_MESSAGES.length>0) setTimeout(()=>{ spawnImportant(); scheduleNextImportant(); },10000);
   startScreamPoller();
