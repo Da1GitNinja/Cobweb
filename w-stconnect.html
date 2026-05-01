@@ -401,10 +401,56 @@ transform: translateX(-50%);
   .msg.size-md { font-size: 13px; }
   .msg.size-sm { font-size: 12px; }
 }
+
+ /* ── Echo Identity Prompt ── */
+#echo-identity {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 24px; background: var(--bg);
+  transition: opacity 0.8s ease;
+}
+#echo-identity.hidden { opacity: 0; pointer-events: none; }
+#echo-identity-title {
+  font-family: 'Uncial Antiqua', serif;
+  font-size: 13px; letter-spacing: 0.35em;
+  color: rgba(140,160,180,0.35); text-transform: uppercase;
+  text-align: center;
+}
+#echo-identity-sub {
+  font-family: 'Special Elite', monospace;
+  font-size: 11px; letter-spacing: 0.2em;
+  color: rgba(100,120,140,0.3); text-transform: uppercase;
+  text-align: center; max-width: 260px; line-height: 1.8;
+}
+#echo-name-input {
+  background: transparent;
+  border: none; border-bottom: 1px solid rgba(160,180,210,0.2);
+  color: rgba(200,215,230,0.8);
+  font-family: 'Special Elite', monospace;
+  font-size: 18px; letter-spacing: 0.15em;
+  padding: 10px 4px; width: 240px;
+  text-align: center; outline: none;
+}
+#echo-name-input::placeholder { color: rgba(120,140,160,0.25); }
+#echo-name-input:focus { border-bottom-color: rgba(160,180,210,0.5); }
+#echo-name-btn {
+  font-family: 'Uncial Antiqua', serif;
+  font-size: 11px; letter-spacing: 0.35em; text-transform: uppercase;
+  color: rgba(140,160,180,0.3); background: none; border: none;
+  cursor: pointer; padding: 8px; transition: color 0.4s ease;
+}
+#echo-name-btn:hover { color: rgba(160,200,230,0.6); }
  
 </style>
 </head>
 <body>
+ <div id="echo-identity">
+  <div id="echo-identity-title">The Cobweb stirs</div>
+  <div id="echo-identity-sub">the network seeks your resonance<br>who stirs in the web?</div>
+  <input id="echo-name-input" type="text" placeholder="your name in the dark" maxlength="40" autocomplete="off" spellcheck="false" />
+  <button id="echo-name-btn">enter the web</button>
+</div>
 <canvas id="web-canvas"></canvas>
 <div id="stage"></div>
 <div id="cursor"></div>
@@ -439,6 +485,20 @@ transform: translateX(-50%);
     <label class="attune-label">signals</label>
     <span class="attune-sublabel">the call</span>
     <input class="attune-slider" id="vol-signals" type="range" min="0" max="1" step="0.01">
+  </div>
+
+<div class="attune-row" style="margin-top: 8px; border-top: 1px solid rgba(200,160,80,0.08); padding-top: 16px;">
+    <span class="attune-label">resonance</span>
+    <span class="attune-sublabel" id="attune-echo-name" style="margin-bottom: 12px;"></span>
+    <button id="change-name-btn" style="
+      background: none; border: none;
+      font-family: 'Uncial Antiqua', serif;
+      font-size: 10px; letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(200,160,80,0.3);
+      cursor: pointer; padding: 4px 0;
+      transition: color 0.3s ease;
+    ">change resonance</button>
   </div>
 </div>
 
@@ -1027,6 +1087,7 @@ volSignalsSlider.addEventListener('input', () => {
 })
 
 function openAttune()  {
+  updateAttuneName()
   attunePanel.classList.add('active')
   attuneBackdrop.classList.add('active')
   attuneBtn.classList.add('active')
@@ -1042,6 +1103,22 @@ function toggleAttune() {
 
 attuneBtn.addEventListener('click', toggleAttune)
 attuneBackdrop.addEventListener('click', closeAttune)
+
+ // ── Change name ────────────────────────────────────────────
+document.getElementById('change-name-btn').addEventListener('click', () => {
+  closeAttune()
+  localStorage.removeItem('cobweb_echo_name')
+  echoNameInput.value = ''
+  echoIdentityOverlay.style.display = 'flex'
+  echoIdentityOverlay.style.opacity = '1'
+  echoIdentityOverlay.classList.remove('hidden')
+  setTimeout(() => echoNameInput.focus(), 300)
+})
+
+function updateAttuneName() {
+  const nameEl = document.getElementById('attune-echo-name')
+  if (nameEl) nameEl.textContent = getEchoName() || 'unknown'
+}
  
 // ── startApp ───────────────────────────────────────────────
 function startApp() {
@@ -1082,6 +1159,34 @@ Promise.allSettled(bootFetchJobs).then(()=>{
   }
 });
 
+ // ── Echo Identity ──────────────────────────────────────
+const echoIdentityOverlay = document.getElementById('echo-identity')
+const echoNameInput       = document.getElementById('echo-name-input')
+const echoNameBtn         = document.getElementById('echo-name-btn')
+
+function getEchoName() {
+  return localStorage.getItem('cobweb_echo_name') || null
+}
+
+function submitEchoName() {
+  const name = echoNameInput.value.trim()
+  if (!name) return
+  localStorage.setItem('cobweb_echo_name', name)
+ updateAttuneName()
+  echoIdentityOverlay.classList.add('hidden')
+  setTimeout(() => echoIdentityOverlay.style.display = 'none', 900)
+}
+
+echoNameBtn.addEventListener('click', submitEchoName)
+echoNameInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitEchoName() })
+
+// Show overlay or skip if name already known
+if (getEchoName()) {
+  echoIdentityOverlay.style.display = 'none'
+} else {
+  setTimeout(() => echoNameInput.focus(), 500)
+}
+
 // ── Cursor ─────────────────────────────────────────────────
 const cursor=document.getElementById('cursor');
 document.addEventListener('mousemove',e=>{ cursor.style.left=e.clientX+'px'; cursor.style.top=e.clientY+'px'; });
@@ -1096,6 +1201,7 @@ document.addEventListener('click', e => {
  if (e.target.closest('#attune-btn')) return
   if (e.target.closest('#attune-panel')) return
   if (e.target.closest('#attune-backdrop')) return
+  if (e.target.closest('#echo-identity')) return
   spawnMessage()
 })
 
