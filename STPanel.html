@@ -241,7 +241,11 @@
       <label>Label (optional)</label>
       <input type="text" id="countdown-label" placeholder="e.g. the ritual begins" />
       <button class="btn btn-red" id="countdown-btn">Set Countdown</button>
-      <button class="btn btn-dim" id="countdown-clear-btn" style="margin-top:10px">Clear Countdown</button>
+    <button class="btn btn-dim" id="countdown-clear-btn" style="margin-top:10px">Clear Countdown</button>
+      <hr style="border:none; border-top:1px solid rgba(160,180,210,0.08); margin: 20px 0;">
+      <h2 style="font-size:13px; letter-spacing:0.25em; text-transform:uppercase; color:rgba(140,160,180,0.45); margin-bottom:12px;">🕸 The Call — Reset Player Uses</h2>
+      <p style="font-size:11px; letter-spacing:0.12em; color:rgba(140,160,180,0.35); margin-bottom:16px; line-height:1.7;">Restores all players' 3 uses of The Call. Use between game sessions.</p>
+      <button class="btn btn-dim" id="resetcall-btn">Reset The Call</button>
     </div>
   </div>
 
@@ -437,6 +441,21 @@ document.getElementById('countdown-clear-btn').addEventListener('click', async (
   btn.classList.replace('btn-red', 'btn-dim')
 })
 
+ // ── Reset The Call ─────────────────────────────────────────
+document.getElementById('resetcall-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('resetcall-btn')
+  btn.disabled = true
+  btn.classList.replace('btn-dim', 'btn-red')
+  try {
+    await post({ type: 'resetcalls', password: currentPassword })
+    toast('the call has been reset for all players', 'success')
+  } catch {
+    toast('something went wrong', 'error')
+  }
+  btn.disabled = false
+  btn.classList.replace('btn-red', 'btn-dim')
+})
+ 
 async function post(data) {
   const res = await fetch(SCRIPT_URL, {
     method: 'POST',
