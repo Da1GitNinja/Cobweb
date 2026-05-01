@@ -47,7 +47,7 @@
 #echoes-btn {
   position: fixed;
   bottom: 22px;
-  left: 50%;
+  left: 36%;
 transform: translateX(-50%);
   z-index: 10;
   font-family: 'Uncial Antiqua', serif;
@@ -380,6 +380,7 @@ transform: translateX(-50%);
   /* Shrink all three bottom buttons */
   #listen-btn,
   #echoes-btn,
+  #call-btn,
   #attune-btn {
     font-size: 11px;
     letter-spacing: 0.18em;
@@ -441,7 +442,174 @@ transform: translateX(-50%);
   cursor: pointer; padding: 8px; transition: color 0.4s ease;
 }
 #echo-name-btn:hover { color: rgba(160,200,230,0.6); }
- 
+
+ /* ── The Call Button ── */
+#call-btn {
+  position: fixed;
+  bottom: 22px;
+  left: 60%;
+  z-index: 10;
+  font-family: 'Uncial Antiqua', serif;
+  font-size: 24px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(100, 220, 180, 0);
+  background: none;
+  border: none;
+  min-width: 64px;
+  min-height: 44px;
+  padding: 14px 8px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  cursor: pointer;
+  user-select: none;
+  pointer-events: none;
+  transition: color 0.6s ease, text-shadow 0.6s ease;
+}
+#call-btn.visible {
+  color: rgba(100, 220, 180, 0.3);
+  pointer-events: all;
+}
+#call-btn.active {
+  color: rgba(100, 220, 180, 0.75);
+  text-shadow:
+    0 0 10px rgba(80, 220, 160, 0.5),
+    0 0 25px rgba(80, 220, 160, 0.25);
+}
+#call-btn.depleted {
+  color: rgba(60, 90, 80, 0.2) !important;
+  pointer-events: all;
+}
+
+/* ── Call Backdrop ── */
+#call-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+#call-backdrop.active { display: block; }
+
+/* ── Call Panel ── */
+#call-panel {
+  position: fixed;
+  bottom: 70px;
+  left: 50%;
+  z-index: 50;
+  width: min(340px, calc(100vw - 32px));
+  padding: 20px 22px;
+  background: rgba(4, 12, 10, 0.96);
+  border: 1px solid rgba(80, 200, 150, 0.15);
+  box-shadow:
+    0 0 40px rgba(0, 150, 100, 0.1),
+    inset 0 0 20px rgba(0, 0, 0, 0.3);
+  font-family: 'Special Elite', monospace;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(8px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+#call-panel.active {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateX(-50%) translateY(0);
+}
+#call-panel-title {
+  font-family: 'Uncial Antiqua', serif;
+  font-size: 11px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: rgba(80, 200, 150, 0.4);
+  margin-bottom: 6px;
+  border-bottom: 1px solid rgba(80, 200, 150, 0.1);
+  padding-bottom: 10px;
+}
+#call-uses-display {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: rgba(80, 200, 150, 0.3);
+  text-transform: uppercase;
+  font-family: 'Uncial Antiqua', serif;
+  margin-bottom: 14px;
+}
+#call-textarea {
+  width: 100%;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(80, 200, 150, 0.12);
+  color: rgba(180, 230, 210, 0.8);
+  font-family: 'Special Elite', monospace;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  padding: 10px 12px;
+  outline: none;
+  resize: none;
+  min-height: 100px;
+  line-height: 1.55;
+  border-radius: 2px;
+  margin-bottom: 8px;
+}
+#call-textarea:focus { border-color: rgba(80, 200, 150, 0.3); }
+#call-textarea::placeholder { color: rgba(60, 120, 90, 0.3); }
+#call-sentence-counter {
+  text-align: right;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: rgba(80, 200, 150, 0.3);
+  margin-bottom: 12px;
+  font-family: 'Uncial Antiqua', serif;
+}
+#call-send-btn {
+  width: 100%;
+  padding: 12px;
+  font-family: 'Special Elite', monospace;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  border: 1px solid rgba(80, 200, 150, 0.2);
+  border-radius: 2px;
+  background: rgba(80, 200, 150, 0.08);
+  color: rgba(100, 220, 180, 0.7);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+#call-send-btn:hover { background: rgba(80, 200, 150, 0.15); }
+#call-send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+#call-depleted-msg {
+  text-align: center;
+  font-size: 12px;
+  color: rgba(60, 120, 90, 0.4);
+  font-style: italic;
+  letter-spacing: 0.1em;
+  padding: 8px 0;
+  display: none;
+}
+
+/* ── Call message colour ── */
+.msg.col-call {
+  color: rgba(100, 220, 180, 0.65);
+}
+
+/* ── Call entries in Echoes ── */
+.echo-entry.call-entry {
+  border-left-color: rgba(80, 200, 150, 0.3);
+}
+.echo-sender {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: rgba(80, 200, 150, 0.5);
+  margin-bottom: 3px;
+  font-family: 'Uncial Antiqua', serif;
+  font-style: italic;
+}
+.echo-msg.call-msg {
+  color: rgba(100, 220, 180, 0.8);
+  text-shadow: 0 0 12px rgba(80, 200, 160, 0.15);
+}
+
+
 </style>
 </head>
 <body>
@@ -466,6 +634,18 @@ transform: translateX(-50%);
 </div>
 
 <div id="echoes-backdrop"></div>
+
+<button id="call-btn" aria-label="Broadcast to the Cobweb">the call</button>
+
+<div id="call-panel" role="dialog" aria-label="Broadcast to the Cobweb">
+  <div id="call-panel-title">pluck the strands</div>
+  <div id="call-uses-display">3 broadcasts remain</div>
+  <textarea id="call-textarea" placeholder="speak into the web..." maxlength="600"></textarea>
+  <div id="call-sentence-counter">5 sentences remain</div>
+  <button id="call-send-btn">broadcast into the web</button>
+  <div id="call-depleted-msg">the web no longer answers your call</div>
+</div>
+<div id="call-backdrop"></div>
 
  <button id="attune-btn" aria-label="Attune audio levels">attune</button>
 
@@ -669,19 +849,31 @@ let pendingNotifSound = null
 function showNotif(message) { queueNotif('scream', message) }
 function showVisionNotif(url) { queueNotif('vision', url) }
 
-function queueNotif(type, payload) {
+function queueNotif(type, payload, sender) {
   if (type === 'scream') {
     addToHistory(payload)
     echoesBtn.classList.add('has-new')
   }
-  notifQueue.push({ type, payload })
+  if (type === 'call') {
+    addCallToHistory(payload, sender)
+    echoesBtn.classList.add('has-new')
+  }
+  notifQueue.push({ type, payload, sender })
   if (notifQueue.length === 1) showNextNotif()
 }
 
 function showNextNotif() {
   if (!notifQueue.length) return
-  const { type, payload } = notifQueue[0]
-  notifBanner.textContent = type === 'scream' ? 'the web calls' : 'a vision approaches'
+  const { type, payload, sender } = notifQueue[0]
+  if (type === 'call') {
+    notifBanner.textContent = `${sender || 'a voice'} pierces the web`
+    notifBanner.style.background = 'rgba(0, 90, 65, 0.94)'
+    notifBanner.style.textShadow = '0 0 12px rgba(80,220,160,0.5)'
+  } else {
+    notifBanner.textContent = type === 'scream' ? 'the web calls' : 'a vision approaches'
+    notifBanner.style.background = 'rgba(160, 0, 0, 0.92)'
+    notifBanner.style.textShadow = '0 0 12px rgba(255,100,100,0.5)'
+  }
   notifBanner.classList.add('active')
   if (navigator.vibrate) navigator.vibrate([100, 50, 200])
   sendSystemNotif(type === 'scream' ? payload : 'a vision approaches')
@@ -711,7 +903,8 @@ function handleNotifTap() {
   const { type, payload } = notifQueue[0]
   clearNotif()
   if (type === 'scream') showScream(payload)
-  else showVision(payload)
+  else if (type === 'vision') showVision(payload)
+  // call type: banner tap just dismisses, message already on screen
 }
 
 notifBanner.addEventListener('click', handleNotifTap)
@@ -1001,19 +1194,25 @@ function renderHistory() {
     return
   }
 
-  screamHistory.forEach((entry, i) => {
+ screamHistory.forEach((entry, i) => {
     const div = document.createElement('div')
-    div.className = 'echo-entry'
+    div.className = 'echo-entry' + (entry.isCall ? ' call-entry' : '')
 
     const time = document.createElement('span')
     time.className = 'echo-time'
     time.textContent = entry.time
+    div.appendChild(time)
+
+    if (entry.isCall && entry.sender) {
+      const sender = document.createElement('span')
+      sender.className = 'echo-sender'
+      sender.textContent = entry.sender + ' speaks into the web'
+      div.appendChild(sender)
+    }
 
     const msg = document.createElement('span')
-    msg.className = 'echo-msg'
+    msg.className = 'echo-msg' + (entry.isCall ? ' call-msg' : '')
     msg.textContent = entry.message
-
-    div.appendChild(time)
     div.appendChild(msg)
     list.appendChild(div)
 
@@ -1119,6 +1318,181 @@ function updateAttuneName() {
   const nameEl = document.getElementById('attune-echo-name')
   if (nameEl) nameEl.textContent = getEchoName() || 'unknown'
 }
+
+ // ── The Call ───────────────────────────────────────────────
+const CALL_MAX_USES  = 3
+const CALL_POLL_MS   = 5000
+
+let callUsesLeft     = parseInt(localStorage.getItem('cobweb_call_uses') ?? '3')
+let lastCallTs       = 0
+let callFirstPoll    = true
+let lastCallResetTs  = parseInt(localStorage.getItem('cobweb_call_reset_ts') ?? '0')
+
+const callBtn             = document.getElementById('call-btn')
+const callPanel           = document.getElementById('call-panel')
+const callBackdrop        = document.getElementById('call-backdrop')
+const callTextarea        = document.getElementById('call-textarea')
+const callSentenceCounter = document.getElementById('call-sentence-counter')
+const callUsesDisplay     = document.getElementById('call-uses-display')
+const callSendBtn         = document.getElementById('call-send-btn')
+const callDepletedMsg     = document.getElementById('call-depleted-msg')
+
+function countSentences(text) {
+  if (!text.trim()) return 0
+  const segs = text.trim().match(/[^.!?…]+[.!?…]+/g)
+  return segs ? segs.length : 1
+}
+
+function updateCallUI() {
+  const depleted = callUsesLeft <= 0
+  callBtn.classList.toggle('depleted', depleted)
+  callUsesDisplay.textContent = depleted
+    ? 'no broadcasts remain'
+    : callUsesLeft === 1 ? '1 broadcast remains' : `${callUsesLeft} broadcasts remain`
+  callSendBtn.style.display      = depleted ? 'none'  : 'block'
+  callTextarea.style.display     = depleted ? 'none'  : 'block'
+  callSentenceCounter.style.display = depleted ? 'none' : 'block'
+  callDepletedMsg.style.display  = depleted ? 'block' : 'none'
+}
+
+callTextarea.addEventListener('input', () => {
+  const sentences = countSentences(callTextarea.value)
+  const remaining = Math.max(0, 5 - sentences)
+  callSentenceCounter.textContent = remaining === 1
+    ? '1 sentence remains'
+    : `${remaining} sentences remain`
+  callSentenceCounter.style.color = remaining === 0
+    ? 'rgba(200,80,80,0.6)'
+    : remaining <= 2
+    ? 'rgba(220,190,80,0.5)'
+    : 'rgba(80,200,150,0.3)'
+  callSendBtn.disabled = sentences > 5
+})
+
+async function sendCall() {
+  const message = callTextarea.value.trim()
+  if (!message || countSentences(message) > 5 || callUsesLeft <= 0) return
+  const sender = getEchoName() || 'unknown'
+  callSendBtn.disabled = true
+  callSendBtn.textContent = 'sending...'
+  try {
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ type: 'call', message, sender })
+    })
+    callUsesLeft--
+    localStorage.setItem('cobweb_call_uses', callUsesLeft)
+    callTextarea.value = ''
+    callSentenceCounter.textContent = '5 sentences remain'
+    updateCallUI()
+    closeCall()
+  } catch {
+    callSendBtn.disabled = false
+    callSendBtn.textContent = 'broadcast into the web'
+    return
+  }
+  callSendBtn.disabled = false
+  callSendBtn.textContent = 'broadcast into the web'
+}
+
+callSendBtn.addEventListener('click', sendCall)
+
+function openCall() {
+  updateCallUI()
+  callPanel.classList.add('active')
+  callBackdrop.classList.add('active')
+  callBtn.classList.add('active')
+  if (callUsesLeft > 0) setTimeout(() => callTextarea.focus(), 300)
+}
+function closeCall() {
+  callPanel.classList.remove('active')
+  callBackdrop.classList.remove('active')
+  callBtn.classList.remove('active')
+}
+function toggleCall() {
+  callPanel.classList.contains('active') ? closeCall() : openCall()
+}
+callBtn.addEventListener('click', toggleCall)
+callBackdrop.addEventListener('click', closeCall)
+
+function spawnCallMessage(text, sender) {
+  const pos = randomPos()
+  const size = SIZES[Math.floor(Math.random() * (SIZES.length - 1))]
+  const rot  = (Math.random() - 0.5) * 3
+  const duration = calcDuration(text) * 1.4
+
+  const el = document.createElement('div')
+  el.className = `msg ${size} col-call`
+  el.textContent = text
+  el.style.left = (pos.x * 100) + '%'
+  el.style.top  = (pos.y * 100) + '%'
+  el.style.transform = `rotate(${rot}deg) translateY(6px)`
+  stage.appendChild(el)
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    el.style.transform = `rotate(${rot}deg) translateY(0)`
+    el.classList.add('visible')
+  }))
+
+  const attr = document.createElement('div')
+  attr.className = 'msg size-sm col-call'
+  attr.textContent = `— ${sender}`
+  attr.style.left = el.style.left
+  attr.style.top  = `calc(${el.style.top} + 3.2em)`
+  attr.style.transform = `rotate(${rot}deg) translateY(6px)`
+  attr.style.opacity = '0'
+  attr.style.transition = 'opacity 1s ease 0.5s, transform 1s ease 0.5s'
+  stage.appendChild(attr)
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    attr.style.opacity = '0.45'
+    attr.style.transform = `rotate(${rot}deg) translateY(0)`
+  }))
+
+  setTimeout(() => {
+    el.classList.remove('visible'); el.classList.add('fading')
+    el.style.transform   = `rotate(${rot}deg) translateY(-5px)`
+    attr.style.opacity   = '0'
+    attr.style.transform = `rotate(${rot}deg) translateY(-5px)`
+    setTimeout(() => { el.remove(); attr.remove() }, 1500)
+  }, duration)
+}
+
+function addCallToHistory(message, sender) {
+  const now = new Date()
+  const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
+  screamHistory.unshift({ message, time: timeStr, sender, isCall: true })
+  if (screamHistory.length > MAX_HISTORY) screamHistory.pop()
+}
+
+function showCallNotif(message, sender) { queueNotif('call', message, sender) }
+
+function pollCall() {
+  fetch(SCRIPT_URL + '?type=call&t=' + Date.now())
+    .then(r => r.json())
+    .then(data => {
+      // Check for ST reset
+      if (data.resetTs && data.resetTs > lastCallResetTs) {
+        lastCallResetTs = data.resetTs
+        localStorage.setItem('cobweb_call_reset_ts', lastCallResetTs)
+        callUsesLeft = CALL_MAX_USES
+        localStorage.setItem('cobweb_call_uses', callUsesLeft)
+        updateCallUI()
+      }
+      // Check for new call broadcast
+      if (!data.ts || !data.message) return
+      if (callFirstPoll) { lastCallTs = data.ts; callFirstPoll = false; return }
+      if (data.ts > lastCallTs) {
+        lastCallTs = data.ts
+        spawnCallMessage(data.message, data.sender)
+        showCallNotif(data.message, data.sender)
+      }
+    })
+    .catch(() => {})
+}
+
+function startCallPoller() {
+  pollCall()
+  setInterval(pollCall, CALL_POLL_MS)
+}
  
 // ── startApp ───────────────────────────────────────────────
 function startApp() {
@@ -1133,6 +1507,7 @@ function startApp() {
   startScreamPoller();
   startVisionPoller();
   startCountdownPoller()
+ startCallPoller()
   showFirstTimeHint()
 }
 
@@ -1173,6 +1548,7 @@ function submitEchoName() {
   if (!name) return
   localStorage.setItem('cobweb_echo_name', name)
  updateAttuneName()
+  callBtn.classList.add('visible')
   echoIdentityOverlay.classList.add('hidden')
   setTimeout(() => echoIdentityOverlay.style.display = 'none', 900)
 }
@@ -1183,6 +1559,7 @@ echoNameInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitEc
 // Show overlay or skip if name already known
 if (getEchoName()) {
   echoIdentityOverlay.style.display = 'none'
+  callBtn.classList.add('visible')
 } else {
   setTimeout(() => echoNameInput.focus(), 500)
 }
@@ -1202,6 +1579,9 @@ document.addEventListener('click', e => {
   if (e.target.closest('#attune-panel')) return
   if (e.target.closest('#attune-backdrop')) return
   if (e.target.closest('#echo-identity')) return
+  if (e.target.closest('#call-btn')) return
+  if (e.target.closest('#call-panel')) return
+  if (e.target.closest('#call-backdrop')) return
   spawnMessage()
 })
 
