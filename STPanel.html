@@ -271,6 +271,7 @@ document.getElementById('scream-msg').addEventListener('input', () => {
 })
  
 let currentPassword = ''
+let leadPassword = ''
 let isLeadST = false
 
 // ── Session restore ────────────────────────────────────────
@@ -342,7 +343,8 @@ document.getElementById('lead-unlock-btn').addEventListener('click', async () =>
       toast('incorrect lead passphrase', 'error')
       return
     }
-    isLeadST = true
+ isLeadST = true
+    leadPassword = pw
     roleBadge.textContent = '— Lead ST —'
     document.getElementById('countdown-locked').style.display = 'none'
     document.getElementById('countdown-controls').style.display = 'block'
@@ -447,7 +449,7 @@ document.getElementById('resetcall-btn').addEventListener('click', async () => {
   btn.disabled = true
   btn.classList.replace('btn-dim', 'btn-red')
   try {
-    await post({ type: 'resetcalls', password: currentPassword })
+    await post({ type: 'resetcalls', password: leadPassword })
     toast('the call has been reset for all players', 'success')
   } catch {
     toast('something went wrong', 'error')
