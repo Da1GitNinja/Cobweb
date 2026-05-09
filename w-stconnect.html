@@ -640,8 +640,8 @@ transform: translateX(-50%);
 <div id="call-panel" role="dialog" aria-label="Broadcast to the Cobweb">
   <div id="call-panel-title">pluck the strands</div>
   <div id="call-uses-display">3 broadcasts remain</div>
-  <textarea id="call-textarea" placeholder="speak into the web..." maxlength="600"></textarea>
-  <div id="call-sentence-counter">5 sentences remain</div>
+<textarea id="call-textarea" placeholder="speak into the web..." maxlength="255"></textarea>
+  <div id="call-sentence-counter">255 characters remain</div>
   <button id="call-send-btn">broadcast into the web</button>
   <div id="call-depleted-msg">the web no longer answers your call</div>
 </div>
@@ -900,11 +900,11 @@ function clearNotif() {
 
 function handleNotifTap() {
   if (!notifQueue.length) return
-  const { type, payload } = notifQueue[0]
+  const { type, payload, sender } = notifQueue[0]
   clearNotif()
   if (type === 'scream') showScream(payload)
   else if (type === 'vision') showVision(payload)
-  // call type: banner tap just dismisses, message already on screen
+  else if (type === 'call') showScream(`${payload}\n\n— ${sender || 'a voice in the web'}`)
 }
 
 notifBanner.addEventListener('click', handleNotifTap)
@@ -1337,11 +1337,6 @@ const callUsesDisplay     = document.getElementById('call-uses-display')
 const callSendBtn         = document.getElementById('call-send-btn')
 const callDepletedMsg     = document.getElementById('call-depleted-msg')
 
-function countSentences(text) {
-  if (!text.trim()) return 0
-  const segs = text.trim().match(/[^.!?…]+[.!?…]+/g)
-  return segs ? segs.length : 1
-}
 
 function updateCallUI() {
   const depleted = callUsesLeft <= 0
@@ -1356,22 +1351,22 @@ function updateCallUI() {
 }
 
 callTextarea.addEventListener('input', () => {
-  const sentences = countSentences(callTextarea.value)
-  const remaining = Math.max(0, 5 - sentences)
+  const len = callTextarea.value.length
+  const remaining = 255 - len
   callSentenceCounter.textContent = remaining === 1
-    ? '1 sentence remains'
-    : `${remaining} sentences remain`
+    ? '1 character remains'
+    : `${remaining} characters remain`
   callSentenceCounter.style.color = remaining === 0
     ? 'rgba(200,80,80,0.6)'
-    : remaining <= 2
+    : remaining <= 30
     ? 'rgba(220,190,80,0.5)'
     : 'rgba(80,200,150,0.3)'
-  callSendBtn.disabled = sentences > 5
+  callSendBtn.disabled = len === 0 || len > 255
 })
 
 async function sendCall() {
   const message = callTextarea.value.trim()
-  if (!message || countSentences(message) > 5 || callUsesLeft <= 0) return
+  if (!message || message.length > 255 || callUsesLeft <= 0) returnn
   const sender = getEchoName() || 'unknown'
   callSendBtn.disabled = true
   callSendBtn.textContent = 'sending...'
