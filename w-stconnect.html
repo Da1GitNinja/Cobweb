@@ -640,8 +640,8 @@ transform: translateX(-50%);
 <div id="call-panel" role="dialog" aria-label="Broadcast to the Cobweb">
   <div id="call-panel-title">pluck the strands</div>
   <div id="call-uses-display">3 broadcasts remain</div>
-<textarea id="call-textarea" placeholder="speak into the web..." maxlength="255"></textarea>
-  <div id="call-sentence-counter">255 characters remain</div>
+<textarea id="call-textarea" placeholder="speak into the web..." maxlength="160"></textarea>
+  <div id="call-sentence-counter">160 characters remain</div>
   <button id="call-send-btn">broadcast into the web</button>
   <div id="call-depleted-msg">the web no longer answers your call</div>
 </div>
@@ -1326,7 +1326,8 @@ const CALL_POLL_MS   = 5000
 let callUsesLeft     = parseInt(localStorage.getItem('cobweb_call_uses') ?? '3')
 let lastCallTs       = 0
 let callFirstPoll    = true
-let lastCallResetTs  = parseInt(localStorage.getItem('cobweb_call_reset_ts') ?? '0')
+let lastCallResetTs  = 0
+let callResetFirstPoll = true
 
 const callBtn             = document.getElementById('call-btn')
 const callPanel           = document.getElementById('call-panel')
@@ -1352,7 +1353,7 @@ function updateCallUI() {
 
 callTextarea.addEventListener('input', () => {
   const len = callTextarea.value.length
-  const remaining = 255 - len
+  const remaining = 160 - len
   callSentenceCounter.textContent = remaining === 1
     ? '1 character remains'
     : `${remaining} characters remain`
@@ -1366,7 +1367,7 @@ callTextarea.addEventListener('input', () => {
 
 async function sendCall() {
   const message = callTextarea.value.trim()
-  if (!message || message.length > 255 || callUsesLeft <= 0) returnn
+  if (!message || message.length > 160 || callUsesLeft <= 0) return
   const sender = getEchoName() || 'unknown'
   callSendBtn.disabled = true
   callSendBtn.textContent = 'sending...'
@@ -1378,7 +1379,7 @@ async function sendCall() {
     callUsesLeft--
     localStorage.setItem('cobweb_call_uses', callUsesLeft)
     callTextarea.value = ''
-    callSentenceCounter.textContent = '5 sentences remain'
+    callSentenceCounter.textContent = '160 characters remain'
     updateCallUI()
     closeCall()
   } catch {
@@ -1464,13 +1465,25 @@ function pollCall() {
   fetch(SCRIPT_URL + '?type=call&t=' + Date.now())
     .then(r => r.json())
     .then(data => {
-      // Check for ST reset
-      if (data.resetTs && data.resetTs > lastCallResetTs) {
-        lastCallResetTs = data.resetTs
-        localStorage.setItem('cobweb_call_reset_ts', lastCallResetTs)
-        callUsesLeft = CALL_MAX_USES
-        localStorage.setItem('cobweb_call_uses', callUsesLeft)
-        updateCallUI()
+ // Check for ST reset
+      if (data.resetTs) {
+        if (callResetFirstPoll) {
+          callResetFirstPoll = false
+          const storedResetTs = parseInt(localStorage.getItem('cobweb_call_reset_ts') ?? '0')
+          if (data.resetTs > storedResetTs) {
+            callUsesLeft = CALL_MAX_USES
+            localStorage.setItem('cobweb_call_uses', callUsesLeft)
+            updateCallUI()
+          }
+          lastCallResetTs = data.resetTs
+          localStorage.setItem('cobweb_call_reset_ts', lastCallResetTs)
+        } else if (data.resetTs > lastCallResetTs) {
+          lastCallResetTs = data.resetTs
+          localStorage.setItem('cobweb_call_reset_ts', lastCallResetTs)
+          callUsesLeft = CALL_MAX_USES
+          localStorage.setItem('cobweb_call_uses', callUsesLeft)
+          updateCallUI()
+        }
       }
       // Check for new call broadcast
       if (!data.ts || !data.message) return
