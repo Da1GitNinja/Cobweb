@@ -145,14 +145,12 @@ transform: translateX(-50%);
   margin-bottom: 16px;
   border-left: 1px solid rgba(160, 100, 200, 0.25);
   padding-left: 12px;
-  /* start hidden — JS adds .echo-visible to trigger the animation */
   opacity: 0;
   transform: translateY(5px);
 }
 .echo-entry.echo-visible {
   animation: echo-bleed 0.7s ease forwards;
 }
-/* Each entry is slightly more faded than the last — oldest = most distant */
 .echo-entry:nth-child(1) { --echo-final-opacity: 1.0; }
 .echo-entry:nth-child(2) { --echo-final-opacity: 0.6; }
 .echo-entry:nth-child(3) { --echo-final-opacity: 0.3; }
@@ -377,7 +375,6 @@ transform: translateX(-50%);
 }
 
 @media (max-width: 480px) {
-  /* Shrink all three bottom buttons */
   #listen-btn,
   #echoes-btn,
   #call-btn,
@@ -388,12 +385,8 @@ transform: translateX(-50%);
     min-width: 44px;
     min-height: 44px;
   }
-
-  /* Tighten horizontal anchors so they don't bleed inward */
   #listen-btn  { left: 14px; }
   #attune-btn  { left: 14px; }
-
-  /* Messages: narrower, fewer words per line */
   .msg {
     max-width: min(260px, 72vw);
   }
@@ -608,8 +601,6 @@ transform: translateX(-50%);
   color: rgba(100, 220, 180, 0.8);
   text-shadow: 0 0 12px rgba(80, 200, 160, 0.15);
 }
-
-
 </style>
 </head>
 <body>
@@ -925,16 +916,20 @@ function dismissScream() { screamOverlay.classList.remove('active'); countdownEl
 function handleScreamTap() { if(!screamActive)return; clearTimeout(screamDrainAnim); dismissScream(); }
 screamOverlay.addEventListener('click', handleScreamTap);
 
-// ── Scream poller — now routes to notif, not direct show ───
-let screamFirstPoll=true, lastScreamTs=0;
+// ── Scream poller ──────────────────────────────────────────
+// FIX: persist lastScreamTs across page loads so missed messages are shown on return
+let lastScreamTs = parseInt(localStorage.getItem('cobweb_last_scream_ts') || '0');
 
 function pollScream() {
   fetch(SCRIPT_URL + '?type=scream&t=' + Date.now())
     .then(r => r.json())
     .then(data => {
       if (!data.ts || !data.message) return
-      if (screamFirstPoll) { lastScreamTs = data.ts; screamFirstPoll = false; return }
-      if (data.ts > lastScreamTs) { lastScreamTs = data.ts; showNotif(data.message) }
+      if (data.ts > lastScreamTs) {
+        lastScreamTs = data.ts
+        localStorage.setItem('cobweb_last_scream_ts', lastScreamTs)
+        showNotif(data.message)
+      }
     })
     .catch(() => {})
 }
@@ -964,11 +959,9 @@ function loadMessagesFromSheet() {
       const {regular,important}=parseCSV(text);
       if(regular.length) MESSAGES=regular;
       if(important.length) IMPORTANT_MESSAGES=important;
-      // save to localStorage after every successful fetch
       localStorage.setItem('cobweb_messages', JSON.stringify({regular, important}));
     })
     .catch(()=>{
-      // fetch failed — try to load last known messages from localStorage
       const cached = localStorage.getItem('cobweb_messages');
       if(cached) {
         const {regular, important} = JSON.parse(cached);
@@ -980,11 +973,9 @@ function loadMessagesFromSheet() {
 
  // ── Notifications ───────────────────────────────────────────
 function requestNotifPermission() {
-  // only ask if they haven't been asked before and the browser supports it
   if (!('Notification' in window)) return
   if (Notification.permission === 'granted') return
   if (Notification.permission === 'denied') return
-  // ask once — browser remembers the answer forever
   Notification.requestPermission()
 }
 
@@ -994,7 +985,6 @@ function sendSystemNotif(message) {
   new Notification('The Cobweb', {
     body: message,
     icon: '/favicon.ico',
-    // silent: false means it uses the phone's default notification sound
     silent: false
   })
 }
@@ -1030,47 +1020,30 @@ function sendSystemNotif(message) {
   document.head.appendChild(style)
 }
  
- // ── Glotches ────────────────────────────────────────────
+ // ── Glitches ────────────────────────────────────────────
  const GLITCH_CHARS = '█▓░▒#@$%&?!'
-// these are the symbols that will briefly replace real characters
 
 function glitchElement(el) {
   const original = el.textContent
-  // save the original text so we can restore it
-
   const chars = original.split('')
-  // split into individual characters so we can swap some out
-
-  // corrupt 2-4 random characters
   const numGlitches = 2 + Math.floor(Math.random() * 3)
   for (let i = 0; i < numGlitches; i++) {
     const pos = Math.floor(Math.random() * chars.length)
-    // pick a random position in the text
     chars[pos] = GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)]
-    // replace it with a random glitch symbol
   }
-
   el.textContent = chars.join('')
-  // put the corrupted text back into the element
-
   setTimeout(() => {
     el.textContent = original
-    // restore original text after 80ms — just a brief flicker
   }, 200)
 }
 
 function runGlitches() {
   const messages = document.querySelectorAll('.msg.visible')
-  // grab all currently visible messages on screen
-
   if (messages.length > 0) {
     const target = messages[Math.floor(Math.random() * messages.length)]
-    // pick one at random
     glitchElement(target)
   }
-
   setTimeout(runGlitches, 800 + Math.random() * 2000)
-  // run again in 0.8 to 2.8 seconds — random so it feels organic
 }
 
  // ── Vision ────────────────────────────────────────────────
@@ -1166,8 +1139,14 @@ function startCountdownPoller() {
 }
 
  // ── Scream History ─────────────────────────────────────────
-const screamHistory = []
+// FIX: restore history from localStorage so messages missed while app was closed are shown
+const screamHistory = JSON.parse(localStorage.getItem('cobweb_history') || '[]')
 const MAX_HISTORY = 3
+
+// FIX: persist history to localStorage whenever it changes
+function saveHistory() {
+  localStorage.setItem('cobweb_history', JSON.stringify(screamHistory))
+}
 
 function addToHistory(message) {
   const now = new Date()
@@ -1178,6 +1157,7 @@ function addToHistory(message) {
   })
   screamHistory.unshift({ message, time: timeStr })
   if (screamHistory.length > MAX_HISTORY) screamHistory.pop()
+  saveHistory() // FIX: persist after every add
 }
 
 function renderHistory() {
@@ -1216,9 +1196,6 @@ function renderHistory() {
     div.appendChild(msg)
     list.appendChild(div)
 
-    // Staggered bleed-in: each entry appears slightly after the previous
-    // requestAnimationFrame ensures the element is in the DOM before
-    // the class is added — required for the CSS animation to fire on iOS
     const delay = i * 160
     setTimeout(() => {
       requestAnimationFrame(() => {
@@ -1238,7 +1215,6 @@ function openEchoes() {
   echoesBackdrop.classList.add('active')
   echoesBtn.classList.add('active')
   echoesBtn.classList.remove('has-new')
-  // Render AFTER the panel is visible so animations trigger correctly
   requestAnimationFrame(() => renderHistory())
 }
 
@@ -1324,8 +1300,8 @@ const CALL_MAX_USES  = 3
 const CALL_POLL_MS   = 5000
 
 let callUsesLeft     = parseInt(localStorage.getItem('cobweb_call_uses') ?? '3')
-let lastCallTs       = 0
-let callFirstPoll    = true
+// FIX: persist lastCallTs across page loads so missed calls are shown on return
+let lastCallTs       = parseInt(localStorage.getItem('cobweb_last_call_ts') || '0')
 let lastCallResetTs  = 0
 let callResetFirstPoll = true
 
@@ -1457,6 +1433,7 @@ function addCallToHistory(message, sender) {
   const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
   screamHistory.unshift({ message, time: timeStr, sender, isCall: true })
   if (screamHistory.length > MAX_HISTORY) screamHistory.pop()
+  saveHistory() // FIX: persist after every add
 }
 
 function showCallNotif(message, sender) { queueNotif('call', message, sender) }
@@ -1465,7 +1442,7 @@ function pollCall() {
   fetch(SCRIPT_URL + '?type=call&t=' + Date.now())
     .then(r => r.json())
     .then(data => {
- // Check for ST reset
+      // Check for ST reset
       if (data.resetTs) {
         if (callResetFirstPoll) {
           callResetFirstPoll = false
@@ -1485,11 +1462,12 @@ function pollCall() {
           updateCallUI()
         }
       }
-      // Check for new call broadcast
+      // FIX: no more callFirstPoll guard — lastCallTs persists across loads
+      // so the ts comparison alone correctly catches any missed messages
       if (!data.ts || !data.message) return
-      if (callFirstPoll) { lastCallTs = data.ts; callFirstPoll = false; return }
       if (data.ts > lastCallTs) {
         lastCallTs = data.ts
+        localStorage.setItem('cobweb_last_call_ts', lastCallTs) // FIX: persist
         spawnCallMessage(data.message, data.sender)
         showCallNotif(data.message, data.sender)
       }
@@ -1515,8 +1493,13 @@ function startApp() {
   startScreamPoller();
   startVisionPoller();
   startCountdownPoller()
- startCallPoller()
+  startCallPoller()
   showFirstTimeHint()
+
+  // FIX: if history was restored from localStorage, light up the echoes dot
+  if (screamHistory.length > 0) {
+    echoesBtn.classList.add('has-new')
+  }
 }
 
 // ── Boot ───────────────────────────────────────────────────
@@ -1535,7 +1518,7 @@ Promise.allSettled(bootFetchJobs).then(()=>{
   startApp();
   setInterval(loadMessagesFromSheet, 10000);
   
- const params = new URLSearchParams(window.location.search)
+  const params = new URLSearchParams(window.location.search)
   const screamMessage = params.get('scream')
   if (screamMessage) {
     showNotif(screamMessage)
@@ -1555,7 +1538,7 @@ function submitEchoName() {
   const name = echoNameInput.value.trim()
   if (!name) return
   localStorage.setItem('cobweb_echo_name', name)
- updateAttuneName()
+  updateAttuneName()
   callBtn.classList.add('visible')
   echoIdentityOverlay.classList.add('hidden')
   setTimeout(() => echoIdentityOverlay.style.display = 'none', 900)
@@ -1583,7 +1566,7 @@ document.addEventListener('click', e => {
   if (e.target.closest('#notif-banner')) return
   if (e.target.closest('#scream-overlay')) return
   if (e.target.closest('#vision-overlay')) return
- if (e.target.closest('#attune-btn')) return
+  if (e.target.closest('#attune-btn')) return
   if (e.target.closest('#attune-panel')) return
   if (e.target.closest('#attune-backdrop')) return
   if (e.target.closest('#echo-identity')) return
