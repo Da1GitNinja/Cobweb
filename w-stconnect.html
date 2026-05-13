@@ -39,572 +39,97 @@
   #scream-overlay.active #scream-timer { opacity: 1; }
   #scream-drain { position: absolute; bottom: 0; left: 0; height: 3px; width: 100%; background: linear-gradient(90deg,rgba(220,0,0,0.9) 0%,rgba(180,0,0,0.6) 100%); transform-origin: left; transform: scaleX(1); }
   #sigil { position: fixed; top: 18px; right: 24px; z-index: 10; font-family: 'Uncial Antiqua',serif; font-size: 11px; letter-spacing: 0.3em; color: rgba(140,160,180,0.2); text-transform: uppercase; pointer-events: none; }
-  #listen-btn { position: fixed; bottom: 22px; left: 24px; z-index: 10; font-family: 'Uncial Antiqua',serif; font-size: 24px; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(140,160,180,0.3); background: none; border: none; cursor: pointer; padding: 14px 8px; transition: color 0.6s ease; user-select: none; touch-action: manipulation; }  #listen-btn:hover { color: rgba(160,200,230,0.65); }
+  #listen-btn { position: fixed; bottom: 22px; left: 24px; z-index: 10; font-family: 'Uncial Antiqua',serif; font-size: 24px; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(140,160,180,0.3); background: none; border: none; cursor: pointer; padding: 14px 8px; transition: color 0.6s ease; user-select: none; touch-action: manipulation; }
+  #listen-btn:hover { color: rgba(160,200,230,0.65); }
   #listen-btn.audio-on { color: rgba(160,200,230,0.55); text-shadow: 0 0 10px rgba(140,190,255,0.9),0 0 25px rgba(140,190,255,0.6),0 0 50px rgba(140,190,255,0.3); }
   #listen-btn.audio-on::before { content: '·'; margin-right: 6px; animation: pulse-dot 2s ease-in-out infinite; }
   @keyframes pulse-dot { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
- /* ── Echoes Button ── */
-#echoes-btn {
-  position: fixed;
-  bottom: 22px;
-  left: 50%;
-transform: translateX(-50%);
-  z-index: 10;
-  font-family: 'Uncial Antiqua', serif;
-  font-size: 24px;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: rgba(140, 160, 180, 0.3);
-  background: none;
-  border: none;
-  min-width: 64px;
-  min-height: 44px;
-  padding: 14px 8px;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  cursor: pointer;
-  user-select: none;
-  transition: color 0.6s ease, text-shadow 0.6s ease;
-  /* needed so the ::after dot positions relative to the button */
-}
-#echoes-btn.active {
-  color: rgba(190, 140, 210, 0.75);
-  text-shadow:
-    0 0 10px rgba(180, 100, 255, 0.5),
-    0 0 25px rgba(180, 100, 255, 0.25);
-}
-/* Pulse dot — appears when a new scream is logged */
-#echoes-btn.has-new::after {
-  content: '';
-  position: absolute;
-  top: 10px;
-  right: 4px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: rgba(200, 80, 255, 0.9);
-  box-shadow: 0 0 8px rgba(200, 80, 255, 0.8);
-  animation: echoes-pulse 1.6s ease-in-out infinite;
-}
-@keyframes echoes-pulse {
-  0%, 100% { opacity: 0.3; transform: scale(0.8); }
-  50%       { opacity: 1;   transform: scale(1.2); }
-}
-
-/* ── Backdrop (tap-outside-to-close) ── */
-#echoes-backdrop {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-#echoes-backdrop.active { display: block; }
-
-/* ── Echoes Panel ── */
-#echoes-panel {
-  position: fixed;
-  bottom: 70px;
-  left: 50%;
-  z-index: 50;
-  width: min(340px, calc(100vw - 32px));
-  padding: 20px 22px calc(20px + env(safe-area-inset-bottom, 0px)) 22px;
-  background: rgba(6, 4, 12, 0.94);
-  border: 1px solid rgba(160, 100, 200, 0.15);
-  box-shadow:
-    0 0 40px rgba(100, 0, 150, 0.15),
-    inset 0 0 20px rgba(0, 0, 0, 0.3);
-  font-family: 'Special Elite', monospace;
-  -webkit-overflow-scrolling: touch;
-  overflow-y: auto;
-  max-height: 60vh;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(-50%) translateY(8px);
-  transition: opacity 0.35s ease, transform 0.35s ease;
-}
-#echoes-panel.active {
-  opacity: 1;
-  pointer-events: all;
-  transform: translateX(-50%) translateY(0);
-}
-#echoes-title {
-  font-family: 'Uncial Antiqua', serif;
-  font-size: 11px;
-  letter-spacing: 0.35em;
-  text-transform: uppercase;
-  color: rgba(180, 140, 200, 0.4);
-  margin-bottom: 16px;
-  border-bottom: 1px solid rgba(160, 100, 200, 0.1);
-  padding-bottom: 10px;
-}
-
-/* ── Echo entries — bleed-in animation ── */
-.echo-entry {
-  margin-bottom: 16px;
-  border-left: 1px solid rgba(160, 100, 200, 0.25);
-  padding-left: 12px;
-  opacity: 0;
-  transform: translateY(5px);
-}
-.echo-entry.echo-visible {
-  animation: echo-bleed 0.7s ease forwards;
-}
-.echo-entry:nth-child(1) { --echo-final-opacity: 1.0; }
-.echo-entry:nth-child(2) { --echo-final-opacity: 0.6; }
-.echo-entry:nth-child(3) { --echo-final-opacity: 0.3; }
-
-@keyframes echo-bleed {
-  0%   { opacity: 0;                         transform: translateY(6px); }
-  40%  { opacity: var(--echo-final-opacity); transform: translateY(-2px); }
-  70%  { opacity: calc(var(--echo-final-opacity) * 0.85); transform: translateY(1px); }
-  100% { opacity: var(--echo-final-opacity); transform: translateY(0); }
-}
-.echo-time {
-  display: block;
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  color: rgba(160, 100, 200, 0.5);
-  margin-bottom: 5px;
-  font-family: 'Uncial Antiqua', serif;
-}
-.echo-msg {
-  display: block;
-  font-size: 14px;
-  color: rgba(215, 195, 235, 0.85);
-  text-shadow: 0 0 12px rgba(180, 100, 255, 0.2);
-  line-height: 1.55;
-}
-.echo-empty {
-  font-size: 13px;
-  color: rgba(160, 140, 180, 0.3);
-  font-style: italic;
-  letter-spacing: 0.1em;
-  text-align: center;
-  padding: 10px 0;
-}
-
-/* ── Notification banner ── */
-#notif-banner {
-  position: fixed;
-  top: -80px;
-  left: 0; right: 0;
-  z-index: 9999;
-  background: rgba(160, 0, 0, 0.92);
-  color: rgba(255, 230, 230, 0.95);
-  text-align: center;
-  padding: 18px 24px;
-  font-family: 'Special Elite', monospace;
-  font-size: 15px;
-  letter-spacing: 0.12em;
-  cursor: pointer;
-  touch-action: manipulation;
-  transition: top 0.4s ease;
-  text-shadow: 0 0 12px rgba(255,100,100,0.5);
-}
-#notif-banner.active { top: 0; }
-
- /* ── Vision overlay ── */
-#vision-overlay {
-  position: fixed; inset: 0; z-index: 200;
-  display: flex; align-items: center; justify-content: center;
-  background: radial-gradient(ellipse at center, rgba(0,10,40,1) 0%, rgba(0,0,15,1) 100%);;
-  opacity: 0; pointer-events: none;
-  transition: opacity 1.2s ease;
-}
-#vision-overlay.active { opacity: 1; pointer-events: all; }
-#vision-img {
-  max-width: 100%; max-height: 100%;
-  object-fit: contain;
-  filter: contrast(1.1) brightness(0.9);
-}
-
- /* ── Countdown ── */
-#countdown {
-  position: fixed;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 50;
-  font-family: 'Uncial Antiqua', serif;
-  font-size: clamp(28px, 6vw, 52px);
-  letter-spacing: 0.15em;
-  color: rgba(180, 200, 220, 0.35);
-  text-shadow: 0 0 20px rgba(140, 180, 255, 0.15);
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 2s ease;
-}
-#countdown.active { opacity: 1; }
-#countdown-label {
-  font-size: clamp(11px, 1.5vw, 14px);
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: rgba(180, 200, 220, 0.25);
-  text-align: center;
-  margin-top: 10px;
-} 
- /* ── Attune Button ── */
-#attune-btn {
-  position: fixed;
-  bottom: 68px;
-  left: 24px;
-  z-index: 10;
-  font-family: 'Uncial Antiqua', serif;
-  font-size: 24px;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: rgba(140, 160, 180, 0);
-  background: none;
-  border: none;
-  min-width: 64px;
-  min-height: 44px;
-  padding: 14px 8px;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  cursor: pointer;
-  user-select: none;
-  pointer-events: none;
-  transition: color 1.2s ease, text-shadow 0.6s ease;
-}
-#attune-btn.visible {
-  color: rgba(140, 160, 180, 0.3);
-  pointer-events: all;
-}
-#attune-btn.active {
-  color: rgba(200, 165, 80, 0.8);
-  text-shadow:
-    0 0 10px rgba(220, 180, 80, 0.45),
-    0 0 28px rgba(200, 140, 40, 0.2);
-}
-
-/* ── Attune Backdrop ── */
-#attune-backdrop {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-#attune-backdrop.active { display: block; }
-
-/* ── Attune Panel ── */
-#attune-panel {
-  position: fixed;
-  bottom: 120px;
-  left: 16px;
-  z-index: 50;
-  width: min(270px, calc(100vw - 32px));
-  padding: 20px 22px;
-  background: rgba(6, 4, 12, 0.94);
-  border: 1px solid rgba(200, 160, 80, 0.12);
-  box-shadow:
-    0 0 40px rgba(160, 110, 20, 0.08),
-    inset 0 0 20px rgba(0, 0, 0, 0.3);
-  font-family: 'Special Elite', monospace;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(8px);
-  transition: opacity 0.35s ease, transform 0.35s ease;
-}
-#attune-panel.active {
-  opacity: 1;
-  pointer-events: all;
-  transform: translateY(0);
-}
-#attune-title {
-  font-family: 'Uncial Antiqua', serif;
-  font-size: 11px;
-  letter-spacing: 0.35em;
-  text-transform: uppercase;
-  color: rgba(200, 160, 80, 0.35);
-  margin-bottom: 18px;
-  border-bottom: 1px solid rgba(200, 160, 80, 0.1);
-  padding-bottom: 10px;
-}
-.attune-row { margin-bottom: 18px; }
-.attune-row:last-child { margin-bottom: 0; }
-.attune-label {
-  display: block;
-  font-family: 'Uncial Antiqua', serif;
-  font-size: 10px;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: rgba(200, 160, 80, 0.5);
-  margin-bottom: 2px;
-}
-.attune-sublabel {
-  display: block;
-  font-size: 11px;
-  color: rgba(160, 150, 130, 0.3);
-  letter-spacing: 0.08em;
-  margin-bottom: 9px;
-  font-style: italic;
-}
-
-/* ── Thread sliders ── */
-.attune-slider {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  height: 1px;
-  background: rgba(200, 160, 80, 0.18);
-  outline: none;
-  border: none;
-  cursor: pointer;
-  display: block;
-}
-.attune-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(210, 175, 95, 0.85);
-  box-shadow: 0 0 8px rgba(200, 160, 60, 0.65), 0 0 18px rgba(180, 130, 40, 0.3);
-  cursor: pointer;
-}
-.attune-slider::-moz-range-thumb {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(210, 175, 95, 0.85);
-  box-shadow: 0 0 8px rgba(200, 160, 60, 0.65);
-  border: none;
-  cursor: pointer;
-}
-
-@media (max-width: 480px) {
-  #listen-btn,
-  #echoes-btn,
-  #call-btn,
-  #attune-btn {
-    font-size: 11px;
-    letter-spacing: 0.18em;
-    padding: 10px 6px;
-    min-width: 44px;
-    min-height: 44px;
+  #echoes-btn { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 10; font-family: 'Uncial Antiqua', serif; font-size: 24px; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(140, 160, 180, 0.3); background: none; border: none; min-width: 64px; min-height: 44px; padding: 14px 8px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; cursor: pointer; user-select: none; transition: color 0.6s ease, text-shadow 0.6s ease; }
+  #echoes-btn.active { color: rgba(190, 140, 210, 0.75); text-shadow: 0 0 10px rgba(180, 100, 255, 0.5), 0 0 25px rgba(180, 100, 255, 0.25); }
+  #echoes-btn.has-new::after { content: ''; position: absolute; top: 10px; right: 4px; width: 6px; height: 6px; border-radius: 50%; background: rgba(200, 80, 255, 0.9); box-shadow: 0 0 8px rgba(200, 80, 255, 0.8); animation: echoes-pulse 1.6s ease-in-out infinite; }
+  @keyframes echoes-pulse { 0%, 100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
+  #echoes-backdrop { display: none; position: fixed; inset: 0; z-index: 40; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  #echoes-backdrop.active { display: block; }
+  #echoes-panel { position: fixed; bottom: 70px; left: 50%; z-index: 50; width: min(340px, calc(100vw - 32px)); padding: 20px 22px calc(20px + env(safe-area-inset-bottom, 0px)) 22px; background: rgba(6, 4, 12, 0.94); border: 1px solid rgba(160, 100, 200, 0.15); box-shadow: 0 0 40px rgba(100, 0, 150, 0.15), inset 0 0 20px rgba(0, 0, 0, 0.3); font-family: 'Special Elite', monospace; -webkit-overflow-scrolling: touch; overflow-y: auto; max-height: 60vh; opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(8px); transition: opacity 0.35s ease, transform 0.35s ease; }
+  #echoes-panel.active { opacity: 1; pointer-events: all; transform: translateX(-50%) translateY(0); }
+  #echoes-title { font-family: 'Uncial Antiqua', serif; font-size: 11px; letter-spacing: 0.35em; text-transform: uppercase; color: rgba(180, 140, 200, 0.4); margin-bottom: 16px; border-bottom: 1px solid rgba(160, 100, 200, 0.1); padding-bottom: 10px; }
+  .echo-entry { margin-bottom: 16px; border-left: 1px solid rgba(160, 100, 200, 0.25); padding-left: 12px; opacity: 0; transform: translateY(5px); }
+  .echo-entry.echo-visible { animation: echo-bleed 0.7s ease forwards; }
+  .echo-entry:nth-child(1) { --echo-final-opacity: 1.0; }
+  .echo-entry:nth-child(2) { --echo-final-opacity: 0.6; }
+  .echo-entry:nth-child(3) { --echo-final-opacity: 0.3; }
+  @keyframes echo-bleed { 0% { opacity: 0; transform: translateY(6px); } 40% { opacity: var(--echo-final-opacity); transform: translateY(-2px); } 70% { opacity: calc(var(--echo-final-opacity) * 0.85); transform: translateY(1px); } 100% { opacity: var(--echo-final-opacity); transform: translateY(0); } }
+  .echo-time { display: block; font-size: 10px; letter-spacing: 0.2em; color: rgba(160, 100, 200, 0.5); margin-bottom: 5px; font-family: 'Uncial Antiqua', serif; }
+  .echo-msg { display: block; font-size: 14px; color: rgba(215, 195, 235, 0.85); text-shadow: 0 0 12px rgba(180, 100, 255, 0.2); line-height: 1.55; }
+  .echo-empty { font-size: 13px; color: rgba(160, 140, 180, 0.3); font-style: italic; letter-spacing: 0.1em; text-align: center; padding: 10px 0; }
+  #notif-banner { position: fixed; top: -80px; left: 0; right: 0; z-index: 9999; background: rgba(160, 0, 0, 0.92); color: rgba(255, 230, 230, 0.95); text-align: center; padding: 18px 24px; font-family: 'Special Elite', monospace; font-size: 15px; letter-spacing: 0.12em; cursor: pointer; touch-action: manipulation; transition: top 0.4s ease; text-shadow: 0 0 12px rgba(255,100,100,0.5); }
+  #notif-banner.active { top: 0; }
+  #vision-overlay { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, rgba(0,10,40,1) 0%, rgba(0,0,15,1) 100%); opacity: 0; pointer-events: none; transition: opacity 1.2s ease; }
+  #vision-overlay.active { opacity: 1; pointer-events: all; }
+  #vision-img { max-width: 100%; max-height: 100%; object-fit: contain; filter: contrast(1.1) brightness(0.9); }
+  #countdown { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 50; font-family: 'Uncial Antiqua', serif; font-size: clamp(28px, 6vw, 52px); letter-spacing: 0.15em; color: rgba(180, 200, 220, 0.35); text-shadow: 0 0 20px rgba(140, 180, 255, 0.15); pointer-events: none; opacity: 0; transition: opacity 2s ease; }
+  #countdown.active { opacity: 1; }
+  #countdown-label { font-size: clamp(11px, 1.5vw, 14px); letter-spacing: 0.3em; text-transform: uppercase; color: rgba(180, 200, 220, 0.25); text-align: center; margin-top: 10px; }
+  #attune-btn { position: fixed; bottom: 68px; left: 24px; z-index: 10; font-family: 'Uncial Antiqua', serif; font-size: 24px; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(140, 160, 180, 0); background: none; border: none; min-width: 64px; min-height: 44px; padding: 14px 8px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; cursor: pointer; user-select: none; pointer-events: none; transition: color 1.2s ease, text-shadow 0.6s ease; }
+  #attune-btn.visible { color: rgba(140, 160, 180, 0.3); pointer-events: all; }
+  #attune-btn.active { color: rgba(200, 165, 80, 0.8); text-shadow: 0 0 10px rgba(220, 180, 80, 0.45), 0 0 28px rgba(200, 140, 40, 0.2); }
+  #attune-backdrop { display: none; position: fixed; inset: 0; z-index: 40; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  #attune-backdrop.active { display: block; }
+  #attune-panel { position: fixed; bottom: 120px; left: 16px; z-index: 50; width: min(270px, calc(100vw - 32px)); padding: 20px 22px; background: rgba(6, 4, 12, 0.94); border: 1px solid rgba(200, 160, 80, 0.12); box-shadow: 0 0 40px rgba(160, 110, 20, 0.08), inset 0 0 20px rgba(0, 0, 0, 0.3); font-family: 'Special Elite', monospace; opacity: 0; pointer-events: none; transform: translateY(8px); transition: opacity 0.35s ease, transform 0.35s ease; }
+  #attune-panel.active { opacity: 1; pointer-events: all; transform: translateY(0); }
+  #attune-title { font-family: 'Uncial Antiqua', serif; font-size: 11px; letter-spacing: 0.35em; text-transform: uppercase; color: rgba(200, 160, 80, 0.35); margin-bottom: 18px; border-bottom: 1px solid rgba(200, 160, 80, 0.1); padding-bottom: 10px; }
+  .attune-row { margin-bottom: 18px; }
+  .attune-row:last-child { margin-bottom: 0; }
+  .attune-label { display: block; font-family: 'Uncial Antiqua', serif; font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(200, 160, 80, 0.5); margin-bottom: 2px; }
+  .attune-sublabel { display: block; font-size: 11px; color: rgba(160, 150, 130, 0.3); letter-spacing: 0.08em; margin-bottom: 9px; font-style: italic; }
+  .attune-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 1px; background: rgba(200, 160, 80, 0.18); outline: none; border: none; cursor: pointer; display: block; }
+  .attune-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 8px; height: 8px; border-radius: 50%; background: rgba(210, 175, 95, 0.85); box-shadow: 0 0 8px rgba(200, 160, 60, 0.65), 0 0 18px rgba(180, 130, 40, 0.3); cursor: pointer; }
+  .attune-slider::-moz-range-thumb { width: 8px; height: 8px; border-radius: 50%; background: rgba(210, 175, 95, 0.85); box-shadow: 0 0 8px rgba(200, 160, 60, 0.65); border: none; cursor: pointer; }
+  @media (max-width: 480px) {
+    #listen-btn, #echoes-btn, #call-btn, #attune-btn { font-size: 11px; letter-spacing: 0.18em; padding: 10px 6px; min-width: 44px; min-height: 44px; }
+    #listen-btn { left: 14px; }
+    #attune-btn { left: 14px; }
+    .msg { max-width: min(260px, 72vw); }
+    .msg.size-xl { font-size: 18px; }
+    .msg.size-lg { font-size: 15px; }
+    .msg.size-md { font-size: 13px; }
+    .msg.size-sm { font-size: 12px; }
   }
-  #listen-btn  { left: 14px; }
-  #attune-btn  { left: 14px; }
-  .msg {
-    max-width: min(260px, 72vw);
-  }
-  .msg.size-xl { font-size: 18px; }
-  .msg.size-lg { font-size: 15px; }
-  .msg.size-md { font-size: 13px; }
-  .msg.size-sm { font-size: 12px; }
-}
-
- /* ── Echo Identity Prompt ── */
-#echo-identity {
-  position: fixed; inset: 0; z-index: 9999;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 24px; background: var(--bg);
-  transition: opacity 0.8s ease;
-}
-#echo-identity.hidden { opacity: 0; pointer-events: none; }
-#echo-identity-title {
-  font-family: 'Uncial Antiqua', serif;
-  font-size: 13px; letter-spacing: 0.35em;
-  color: rgba(140,160,180,0.35); text-transform: uppercase;
-  text-align: center;
-}
-#echo-identity-sub {
-  font-family: 'Special Elite', monospace;
-  font-size: 11px; letter-spacing: 0.2em;
-  color: rgba(100,120,140,0.3); text-transform: uppercase;
-  text-align: center; max-width: 260px; line-height: 1.8;
-}
-#echo-name-input {
-  background: transparent;
-  border: none; border-bottom: 1px solid rgba(160,180,210,0.2);
-  color: rgba(200,215,230,0.8);
-  font-family: 'Special Elite', monospace;
-  font-size: 18px; letter-spacing: 0.15em;
-  padding: 10px 4px; width: 240px;
-  text-align: center; outline: none;
-}
-#echo-name-input::placeholder { color: rgba(120,140,160,0.25); }
-#echo-name-input:focus { border-bottom-color: rgba(160,180,210,0.5); }
-#echo-name-btn {
-  font-family: 'Uncial Antiqua', serif;
-  font-size: 11px; letter-spacing: 0.35em; text-transform: uppercase;
-  color: rgba(140,160,180,0.3); background: none; border: none;
-  cursor: pointer; padding: 8px; transition: color 0.4s ease;
-}
-#echo-name-btn:hover { color: rgba(160,200,230,0.6); }
-
- /* ── The Call Button ── */
-#call-btn {
-  position: fixed;
-  bottom: 22px;
-  left: 72%;
-  z-index: 10;
-  font-family: 'Uncial Antiqua', serif;
-  font-size: 24px;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: rgba(100, 220, 180, 0);
-  background: none;
-  border: none;
-  min-width: 64px;
-  min-height: 44px;
-  padding: 14px 8px;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  cursor: pointer;
-  user-select: none;
-  pointer-events: none;
-  transition: color 0.6s ease, text-shadow 0.6s ease;
-}
-#call-btn.visible {
-  color: rgba(100, 220, 180, 0.3);
-  pointer-events: all;
-}
-#call-btn.active {
-  color: rgba(100, 220, 180, 0.75);
-  text-shadow:
-    0 0 10px rgba(80, 220, 160, 0.5),
-    0 0 25px rgba(80, 220, 160, 0.25);
-}
-#call-btn.depleted {
-  color: rgba(60, 90, 80, 0.2) !important;
-  pointer-events: all;
-}
-
-/* ── Call Backdrop ── */
-#call-backdrop {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-#call-backdrop.active { display: block; }
-
-/* ── Call Panel ── */
-#call-panel {
-  position: fixed;
-  bottom: 70px;
-  left: 50%;
-  z-index: 50;
-  width: min(340px, calc(100vw - 32px));
-  padding: 20px 22px;
-  background: rgba(4, 12, 10, 0.96);
-  border: 1px solid rgba(80, 200, 150, 0.15);
-  box-shadow:
-    0 0 40px rgba(0, 150, 100, 0.1),
-    inset 0 0 20px rgba(0, 0, 0, 0.3);
-  font-family: 'Special Elite', monospace;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(-50%) translateY(8px);
-  transition: opacity 0.35s ease, transform 0.35s ease;
-}
-#call-panel.active {
-  opacity: 1;
-  pointer-events: all;
-  transform: translateX(-50%) translateY(0);
-}
-#call-panel-title {
-  font-family: 'Uncial Antiqua', serif;
-  font-size: 11px;
-  letter-spacing: 0.35em;
-  text-transform: uppercase;
-  color: rgba(80, 200, 150, 0.4);
-  margin-bottom: 6px;
-  border-bottom: 1px solid rgba(80, 200, 150, 0.1);
-  padding-bottom: 10px;
-}
-#call-uses-display {
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  color: rgba(80, 200, 150, 0.3);
-  text-transform: uppercase;
-  font-family: 'Uncial Antiqua', serif;
-  margin-bottom: 14px;
-}
-#call-textarea {
-  width: 100%;
-  background: rgba(0,0,0,0.3);
-  border: 1px solid rgba(80, 200, 150, 0.12);
-  color: rgba(180, 230, 210, 0.8);
-  font-family: 'Special Elite', monospace;
-  font-size: 13px;
-  letter-spacing: 0.05em;
-  padding: 10px 12px;
-  outline: none;
-  resize: none;
-  min-height: 100px;
-  line-height: 1.55;
-  border-radius: 2px;
-  margin-bottom: 8px;
-}
-#call-textarea:focus { border-color: rgba(80, 200, 150, 0.3); }
-#call-textarea::placeholder { color: rgba(60, 120, 90, 0.3); }
-#call-sentence-counter {
-  text-align: right;
-  font-size: 10px;
-  letter-spacing: 0.15em;
-  color: rgba(80, 200, 150, 0.3);
-  margin-bottom: 12px;
-  font-family: 'Uncial Antiqua', serif;
-}
-#call-send-btn {
-  width: 100%;
-  padding: 12px;
-  font-family: 'Special Elite', monospace;
-  font-size: 12px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  border: 1px solid rgba(80, 200, 150, 0.2);
-  border-radius: 2px;
-  background: rgba(80, 200, 150, 0.08);
-  color: rgba(100, 220, 180, 0.7);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-#call-send-btn:hover { background: rgba(80, 200, 150, 0.15); }
-#call-send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-#call-depleted-msg {
-  text-align: center;
-  font-size: 12px;
-  color: rgba(60, 120, 90, 0.4);
-  font-style: italic;
-  letter-spacing: 0.1em;
-  padding: 8px 0;
-  display: none;
-}
-
-/* ── Call message colour ── */
-.msg.col-call {
-  color: rgba(100, 220, 180, 0.65);
-}
-
-/* ── Call entries in Echoes ── */
-.echo-entry.call-entry {
-  border-left-color: rgba(80, 200, 150, 0.3);
-}
-.echo-sender {
-  display: block;
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  color: rgba(80, 200, 150, 0.5);
-  margin-bottom: 3px;
-  font-family: 'Uncial Antiqua', serif;
-  font-style: italic;
-}
-.echo-msg.call-msg {
-  color: rgba(100, 220, 180, 0.8);
-  text-shadow: 0 0 12px rgba(80, 200, 160, 0.15);
-}
+  #echo-identity { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; background: var(--bg); transition: opacity 0.8s ease; }
+  #echo-identity.hidden { opacity: 0; pointer-events: none; }
+  #echo-identity-title { font-family: 'Uncial Antiqua', serif; font-size: 13px; letter-spacing: 0.35em; color: rgba(140,160,180,0.35); text-transform: uppercase; text-align: center; }
+  #echo-identity-sub { font-family: 'Special Elite', monospace; font-size: 11px; letter-spacing: 0.2em; color: rgba(100,120,140,0.3); text-transform: uppercase; text-align: center; max-width: 260px; line-height: 1.8; }
+  #echo-name-input { background: transparent; border: none; border-bottom: 1px solid rgba(160,180,210,0.2); color: rgba(200,215,230,0.8); font-family: 'Special Elite', monospace; font-size: 18px; letter-spacing: 0.15em; padding: 10px 4px; width: 240px; text-align: center; outline: none; }
+  #echo-name-input::placeholder { color: rgba(120,140,160,0.25); }
+  #echo-name-input:focus { border-bottom-color: rgba(160,180,210,0.5); }
+  #echo-name-btn { font-family: 'Uncial Antiqua', serif; font-size: 11px; letter-spacing: 0.35em; text-transform: uppercase; color: rgba(140,160,180,0.3); background: none; border: none; cursor: pointer; padding: 8px; transition: color 0.4s ease; }
+  #echo-name-btn:hover { color: rgba(160,200,230,0.6); }
+  #call-btn { position: fixed; bottom: 22px; left: 72%; z-index: 10; font-family: 'Uncial Antiqua', serif; font-size: 24px; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(100, 220, 180, 0); background: none; border: none; min-width: 64px; min-height: 44px; padding: 14px 8px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; cursor: pointer; user-select: none; pointer-events: none; transition: color 0.6s ease, text-shadow 0.6s ease; }
+  #call-btn.visible { color: rgba(100, 220, 180, 0.3); pointer-events: all; }
+  #call-btn.active { color: rgba(100, 220, 180, 0.75); text-shadow: 0 0 10px rgba(80, 220, 160, 0.5), 0 0 25px rgba(80, 220, 160, 0.25); }
+  #call-btn.depleted { color: rgba(60, 90, 80, 0.2) !important; pointer-events: all; }
+  #call-backdrop { display: none; position: fixed; inset: 0; z-index: 40; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  #call-backdrop.active { display: block; }
+  #call-panel { position: fixed; bottom: 70px; left: 50%; z-index: 50; width: min(340px, calc(100vw - 32px)); padding: 20px 22px; background: rgba(4, 12, 10, 0.96); border: 1px solid rgba(80, 200, 150, 0.15); box-shadow: 0 0 40px rgba(0, 150, 100, 0.1), inset 0 0 20px rgba(0, 0, 0, 0.3); font-family: 'Special Elite', monospace; opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(8px); transition: opacity 0.35s ease, transform 0.35s ease; }
+  #call-panel.active { opacity: 1; pointer-events: all; transform: translateX(-50%) translateY(0); }
+  #call-panel-title { font-family: 'Uncial Antiqua', serif; font-size: 11px; letter-spacing: 0.35em; text-transform: uppercase; color: rgba(80, 200, 150, 0.4); margin-bottom: 6px; border-bottom: 1px solid rgba(80, 200, 150, 0.1); padding-bottom: 10px; }
+  #call-uses-display { font-size: 10px; letter-spacing: 0.2em; color: rgba(80, 200, 150, 0.3); text-transform: uppercase; font-family: 'Uncial Antiqua', serif; margin-bottom: 14px; }
+  #call-textarea { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(80, 200, 150, 0.12); color: rgba(180, 230, 210, 0.8); font-family: 'Special Elite', monospace; font-size: 13px; letter-spacing: 0.05em; padding: 10px 12px; outline: none; resize: none; min-height: 100px; line-height: 1.55; border-radius: 2px; margin-bottom: 8px; }
+  #call-textarea:focus { border-color: rgba(80, 200, 150, 0.3); }
+  #call-textarea::placeholder { color: rgba(60, 120, 90, 0.3); }
+  #call-sentence-counter { text-align: right; font-size: 10px; letter-spacing: 0.15em; color: rgba(80, 200, 150, 0.3); margin-bottom: 12px; font-family: 'Uncial Antiqua', serif; }
+  #call-send-btn { width: 100%; padding: 12px; font-family: 'Special Elite', monospace; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; border: 1px solid rgba(80, 200, 150, 0.2); border-radius: 2px; background: rgba(80, 200, 150, 0.08); color: rgba(100, 220, 180, 0.7); cursor: pointer; transition: all 0.2s ease; }
+  #call-send-btn:hover { background: rgba(80, 200, 150, 0.15); }
+  #call-send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  #call-depleted-msg { text-align: center; font-size: 12px; color: rgba(60, 120, 90, 0.4); font-style: italic; letter-spacing: 0.1em; padding: 8px 0; display: none; }
+  .msg.col-call { color: rgba(100, 220, 180, 0.65); }
+  .echo-entry.call-entry { border-left-color: rgba(80, 200, 150, 0.3); }
+  .echo-sender { display: block; font-size: 10px; letter-spacing: 0.2em; color: rgba(80, 200, 150, 0.5); margin-bottom: 3px; font-family: 'Uncial Antiqua', serif; font-style: italic; }
+  .echo-msg.call-msg { color: rgba(100, 220, 180, 0.8); text-shadow: 0 0 12px rgba(80, 200, 160, 0.15); }
 </style>
 </head>
 <body>
- <div id="echo-identity">
+<div id="echo-identity">
   <div id="echo-identity-title">The Cobweb stirs</div>
   <div id="echo-identity-sub">the network seeks your resonance<br>who stirs in the web?</div>
   <input id="echo-name-input" type="text" placeholder="your name" maxlength="40" autocomplete="off" spellcheck="false" />
@@ -615,31 +140,23 @@ transform: translateX(-50%);
 <div id="cursor"></div>
 <div id="sigil">cobweb</div>
 <button id="listen-btn">listen</button>
-
- <!-- Echo button stuff -->
- <button id="echoes-btn" aria-label="View past screams">echoes</button>
-
+<button id="echoes-btn" aria-label="View past screams">echoes</button>
 <div id="echoes-panel" role="dialog" aria-label="Past screams">
   <div id="echoes-title">the web remembers</div>
   <div id="echoes-list"></div>
 </div>
-
 <div id="echoes-backdrop"></div>
-
 <button id="call-btn" aria-label="Broadcast to the Cobweb">the call</button>
-
 <div id="call-panel" role="dialog" aria-label="Broadcast to the Cobweb">
   <div id="call-panel-title">pluck the strands</div>
   <div id="call-uses-display">3 broadcasts remain</div>
-<textarea id="call-textarea" placeholder="speak into the web..." maxlength="160"></textarea>
+  <textarea id="call-textarea" placeholder="speak into the web..." maxlength="160"></textarea>
   <div id="call-sentence-counter">160 characters remain</div>
   <button id="call-send-btn">broadcast into the web</button>
   <div id="call-depleted-msg">the web no longer answers your call</div>
 </div>
 <div id="call-backdrop"></div>
-
- <button id="attune-btn" aria-label="Attune audio levels">attune</button>
-
+<button id="attune-btn" aria-label="Attune audio levels">attune</button>
 <div id="attune-panel" role="dialog" aria-label="Audio levels">
   <div id="attune-title">attune the signal</div>
   <div class="attune-row">
@@ -657,32 +174,18 @@ transform: translateX(-50%);
     <span class="attune-sublabel">the call</span>
     <input class="attune-slider" id="vol-signals" type="range" min="0" max="1" step="0.01">
   </div>
-
-<div class="attune-row" style="margin-top: 8px; border-top: 1px solid rgba(200,160,80,0.08); padding-top: 16px;">
+  <div class="attune-row" style="margin-top: 8px; border-top: 1px solid rgba(200,160,80,0.08); padding-top: 16px;">
     <span class="attune-label">resonance</span>
     <span class="attune-sublabel" id="attune-echo-name" style="margin-bottom: 12px;"></span>
-    <button id="change-name-btn" style="
-      background: none; border: none;
-      font-family: 'Uncial Antiqua', serif;
-      font-size: 10px; letter-spacing: 0.3em;
-      text-transform: uppercase;
-      color: rgba(200,160,80,0.3);
-      cursor: pointer; padding: 4px 0;
-      transition: color 0.3s ease;
-    ">change resonance</button>
+    <button id="change-name-btn" style="background: none; border: none; font-family: 'Uncial Antiqua', serif; font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(200,160,80,0.3); cursor: pointer; padding: 4px 0; transition: color 0.3s ease;">change resonance</button>
   </div>
 </div>
-
 <div id="attune-backdrop"></div>
- 
-<!-- Notification banner stuff -->
 <div id="notif-banner">tap to receive transmission</div>
- <!-- Countdown -->
 <div id="countdown">
   <div id="countdown-time"></div>
   <div id="countdown-label"></div>
 </div>
-<!-- Vision flash -->
 <div id="vision-overlay">
   <img id="vision-img" src="" alt="" />
 </div>
@@ -691,22 +194,25 @@ transform: translateX(-50%);
   <div id="scream-timer">fading in 30 seconds</div>
   <div id="scream-drain"></div>
 </div>
+
 <script>
 'use strict';
 
 const SHEET_CSV_URL  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGPc7hKXGZ1FKR8E0Vnks6W0NdTVB00eaR6C4Tqi_cqVSwOLZYwIjs1yeCym_p3se6kN7JyVqc5ZXp/pub?gid=0&single=true&output=csv';
 const AUDIO_CSV_URL  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGPc7hKXGZ1FKR8E0Vnks6W0NdTVB00eaR6C4Tqi_cqVSwOLZYwIjs1yeCym_p3se6kN7JyVqc5ZXp/pub?gid=2041856543&single=true&output=csv';
+const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbyscQgjEj5yr8KmFMchhnTsHkJOtv2QXxZERFZBSYBGbKmdHKTdxTTLq2Pd8C9nfrC4/exec';
 
 const SCREAM_DURATION_MS = 30000;
 const SCREAM_POLL_MS     = 3000;
 const AUDIO_MIN_GAP_MS   = 10000;
 const AUDIO_MAX_GAP_MS   = 15000;
-const AMBIENT_URL = '/Cobweb/audio/Ambientlong.mp3';
-const NOTIF_SOUND_URL = 'https://www.dropbox.com/scl/fi/3bc5wshigba9axgs37306/102308_1306869-lq.mp3?rlkey=b9y9uo999h6fp4gkn1r3htr33&st=6wcw4swl&raw=1';
+const AMBIENT_URL        = '/Cobweb/audio/Ambientlong.mp3';
+const NOTIF_SOUND_URL    = 'https://www.dropbox.com/scl/fi/3bc5wshigba9axgs37306/102308_1306869-lq.mp3?rlkey=b9y9uo999h6fp4gkn1r3htr33&st=6wcw4swl&raw=1';
+
 let AUDIO_VOLUME   = parseFloat(localStorage.getItem('cobweb_vol_voices')  ?? '0.18');
 let AMBIENT_VOLUME = parseFloat(localStorage.getItem('cobweb_vol_ambient') ?? '0.50');
 let NOTIF_VOLUME   = parseFloat(localStorage.getItem('cobweb_vol_signals') ?? '0.60');
- 
+
 let MESSAGES           = ["the signal is lost","no messages found","the feed is empty","waiting for transmission","this is a test"];
 let IMPORTANT_MESSAGES = ["connection failed"];
 let AUDIO_FILE_IDS     = [];
@@ -763,7 +269,7 @@ let usedImportant=[];
 function pickImportant() { if(usedImportant.length>=IMPORTANT_MESSAGES.length)usedImportant=[]; const r=IMPORTANT_MESSAGES.filter(m=>!usedImportant.includes(m)); const m=r[Math.floor(Math.random()*r.length)]; usedImportant.push(m); return m; }
 
 function spawnImportant() {
-  if(!IMPORTANT_MESSAGES.length)return;
+  if(!IMPORTANT_MESSAGES.length) return;
   const text=pickImportant(), duration=calcDuration(text)*1.4, yPct=(0.15+Math.random()*0.65)*100;
   const el=document.createElement('div'); el.className='msg size-lg important'; el.textContent=text;
   el.style.top=yPct+'%'; el.style.transform='translateX(-50%) translateY(6px)';
@@ -781,50 +287,47 @@ function shuffle(arr) { const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=
 function nextFileId() { if(!shuffledIds.length)shuffledIds=shuffle(AUDIO_FILE_IDS); return shuffledIds.pop(); }
 function driveUrl(id) { return id; }
 function playNextClip() {
-  if(!audioEnabled||!AUDIO_FILE_IDS.length)return;
-  const id=nextFileId(); if(!id)return;
- if(currentAudio){currentAudio.pause();currentAudio.src='';currentAudio=null;}
-const audio = iosUnlockedAudio || new Audio();
-audio.src = driveUrl(id); audio.volume=AUDIO_VOLUME; currentAudio=audio;
-audio.play().catch(()=>{});
+  if(!audioEnabled||!AUDIO_FILE_IDS.length) return;
+  const id=nextFileId(); if(!id) return;
+  if(currentAudio){currentAudio.pause();currentAudio.src='';currentAudio=null;}
+  const audio = iosUnlockedAudio || new Audio();
+  audio.src = driveUrl(id); audio.volume=AUDIO_VOLUME; currentAudio=audio;
+  audio.play().catch(()=>{});
   setTimeout(()=>{ if(audioEnabled)playNextClip(); },AUDIO_MIN_GAP_MS+Math.random()*(AUDIO_MAX_GAP_MS-AUDIO_MIN_GAP_MS));
 }
 
 const listenBtn=document.getElementById('listen-btn');
 listenBtn.addEventListener('click',()=>{
- if (!iosUnlockedAudio) {
-  iosUnlockedAudio = new Audio();
-  iosUnlockedAudio.play().catch(() => {});
-}
-if (!iosNotifAudio && NOTIF_SOUND_URL) {
-  iosNotifAudio = new Audio(NOTIF_SOUND_URL);
-  iosNotifAudio.volume = NOTIF_VOLUME
-  iosNotifAudio.play().catch(() => {});
-  iosNotifAudio.pause();
-  iosNotifAudio.currentTime = 0;
-}
- localStorage.setItem('cobweb_welcomed', '1')
-const hint = document.getElementById('first-hint')
-if (hint) hint.remove()
-  audioEnabled=!audioEnabled;
-  listenBtn.classList.toggle('audio-on',audioEnabled);
- attuneBtn.classList.toggle('visible', audioEnabled);
-if (!audioEnabled) closeAttune();
-  listenBtn.textContent=audioEnabled?'listening':'listen';
- requestNotifPermission()
-  if(audioEnabled){
-    playNextClip();
-    if(AMBIENT_URL){
-      ambientAudio=new Audio(AMBIENT_URL);
-ambientAudio.volume=AMBIENT_VOLUME;
-ambientAudio.loop=true;
-ambientAudio.addEventListener('ended', () => {
-  if (ambientAudio) {
-    ambientAudio.currentTime = 0;
-    ambientAudio.play().catch(()=>{});
+  if (!iosUnlockedAudio) {
+    iosUnlockedAudio = new Audio();
+    iosUnlockedAudio.play().catch(()=>{});
   }
-});
-ambientAudio.play().catch(()=>{});
+  if (!iosNotifAudio && NOTIF_SOUND_URL) {
+    iosNotifAudio = new Audio(NOTIF_SOUND_URL);
+    iosNotifAudio.volume = NOTIF_VOLUME;
+    iosNotifAudio.play().catch(()=>{});
+    iosNotifAudio.pause();
+    iosNotifAudio.currentTime = 0;
+  }
+  localStorage.setItem('cobweb_welcomed', '1');
+  const hint = document.getElementById('first-hint');
+  if (hint) hint.remove();
+  audioEnabled = !audioEnabled;
+  listenBtn.classList.toggle('audio-on', audioEnabled);
+  attuneBtn.classList.toggle('visible', audioEnabled);
+  if (!audioEnabled) closeAttune();
+  listenBtn.textContent = audioEnabled ? 'listening' : 'listen';
+  requestNotifPermission();
+  if (audioEnabled) {
+    playNextClip();
+    if (AMBIENT_URL) {
+      ambientAudio = new Audio(AMBIENT_URL);
+      ambientAudio.volume = AMBIENT_VOLUME;
+      ambientAudio.loop = true;
+      ambientAudio.addEventListener('ended', () => {
+        if (ambientAudio) { ambientAudio.currentTime = 0; ambientAudio.play().catch(()=>{}); }
+      });
+      ambientAudio.play().catch(()=>{});
     }
   } else {
     if(currentAudio){currentAudio.pause();currentAudio.src='';currentAudio=null;}
@@ -832,80 +335,70 @@ ambientAudio.play().catch(()=>{});
   }
 });
 
+// ── Notification queue ─────────────────────────────────────
+const notifBanner = document.getElementById('notif-banner');
+let notifQueue = [];
+let pendingNotifSound = null;
 
-const notifBanner = document.getElementById('notif-banner')
-let notifQueue = []
-let pendingNotifSound = null
-
-function showNotif(message) { queueNotif('scream', message) }
-function showVisionNotif(url) { queueNotif('vision', url) }
-
+// History is now managed by sync functions — queueNotif only handles the banner/sound
 function queueNotif(type, payload, sender) {
-  if (type === 'scream') {
-    addToHistory(payload)
-    echoesBtn.classList.add('has-new')
-  }
-  if (type === 'call') {
-    addCallToHistory(payload, sender)
-    echoesBtn.classList.add('has-new')
-  }
-  notifQueue.push({ type, payload, sender })
-  if (notifQueue.length === 1) showNextNotif()
+  notifQueue.push({ type, payload, sender });
+  if (notifQueue.length === 1) showNextNotif();
 }
 
 function showNextNotif() {
-  if (!notifQueue.length) return
-  const { type, payload, sender } = notifQueue[0]
+  if (!notifQueue.length) return;
+  const { type, payload, sender } = notifQueue[0];
   if (type === 'call') {
-    notifBanner.textContent = `${sender || 'a voice'} pierces the web`
-    notifBanner.style.background = 'rgba(0, 90, 65, 0.94)'
-    notifBanner.style.textShadow = '0 0 12px rgba(80,220,160,0.5)'
+    notifBanner.textContent = `${sender || 'a voice'} pierces the web`;
+    notifBanner.style.background = 'rgba(0, 90, 65, 0.94)';
+    notifBanner.style.textShadow = '0 0 12px rgba(80,220,160,0.5)';
   } else {
-    notifBanner.textContent = type === 'scream' ? 'the web calls' : 'a vision approaches'
-    notifBanner.style.background = 'rgba(160, 0, 0, 0.92)'
-    notifBanner.style.textShadow = '0 0 12px rgba(255,100,100,0.5)'
+    notifBanner.textContent = type === 'scream' ? 'the web calls' : 'a vision approaches';
+    notifBanner.style.background = 'rgba(160, 0, 0, 0.92)';
+    notifBanner.style.textShadow = '0 0 12px rgba(255,100,100,0.5)';
   }
-  notifBanner.classList.add('active')
-  if (navigator.vibrate) navigator.vibrate([100, 50, 200])
-  sendSystemNotif(type === 'scream' ? payload : 'a vision approaches')
-if (iosNotifAudio || NOTIF_SOUND_URL) {
-    const notifSound = iosNotifAudio || new Audio(NOTIF_SOUND_URL)
-    notifSound.currentTime = 0
-    notifSound.volume = NOTIF_VOLUME
-    notifSound.play().catch(() => {})
-    pendingNotifSound = notifSound
+  notifBanner.classList.add('active');
+  if (navigator.vibrate) navigator.vibrate([100, 50, 200]);
+  sendSystemNotif(type === 'scream' || type === 'call' ? payload : 'a vision approaches');
+  if (iosNotifAudio || NOTIF_SOUND_URL) {
+    const notifSound = iosNotifAudio || new Audio(NOTIF_SOUND_URL);
+    notifSound.currentTime = 0;
+    notifSound.volume = NOTIF_VOLUME;
+    notifSound.play().catch(()=>{});
+    pendingNotifSound = notifSound;
     notifSound.addEventListener('ended', () => {
       if (pendingNotifSound) setTimeout(() => {
-        if (pendingNotifSound) { pendingNotifSound.currentTime = 0; pendingNotifSound.play().catch(() => {}) }
-      }, 4000)
-    })
+        if (pendingNotifSound) { pendingNotifSound.currentTime = 0; pendingNotifSound.play().catch(()=>{}); }
+      }, 4000);
+    });
   }
 }
- 
+
 function clearNotif() {
-  notifQueue.shift()
-  notifBanner.classList.remove('active')
-  if (pendingNotifSound) { pendingNotifSound.pause(); pendingNotifSound = null }
-  if (notifQueue.length > 0) setTimeout(showNextNotif, 600)
+  notifQueue.shift();
+  notifBanner.classList.remove('active');
+  if (pendingNotifSound) { pendingNotifSound.pause(); pendingNotifSound = null; }
+  if (notifQueue.length > 0) setTimeout(showNextNotif, 600);
 }
 
 function handleNotifTap() {
-  if (!notifQueue.length) return
-  const { type, payload, sender } = notifQueue[0]
-  clearNotif()
-  if (type === 'scream') showScream(payload)
-  else if (type === 'vision') showVision(payload)
-  else if (type === 'call') showScream(`${payload}\n\n— ${sender || 'a voice in the web'}`)
+  if (!notifQueue.length) return;
+  const { type, payload, sender } = notifQueue[0];
+  clearNotif();
+  if (type === 'scream') showScream(payload);
+  else if (type === 'vision') showVision(payload);
+  else if (type === 'call') showScream(`${payload}\n\n— ${sender || 'a voice in the web'}`);
 }
 
-notifBanner.addEventListener('click', handleNotifTap)
+notifBanner.addEventListener('click', handleNotifTap);
 
 // ── Scream overlay ─────────────────────────────────────────
 const screamOverlay=document.getElementById('scream-overlay'), screamText=document.getElementById('scream-text'), screamDrain=document.getElementById('scream-drain');
 let screamActive=false, screamDrainAnim=null;
 
 function showScream(message) {
-  if(screamActive)return; screamActive=true; screamText.textContent=message;
+  if(screamActive) return; screamActive=true; screamText.textContent=message;
   countdownEl.style.visibility = 'hidden';
   screamDrain.style.transition='none'; screamDrain.style.transform='scaleX(1)';
   screamOverlay.classList.add('active');
@@ -913,33 +406,102 @@ function showScream(message) {
   screamDrainAnim=setTimeout(dismissScream,SCREAM_DURATION_MS);
 }
 function dismissScream() { screamOverlay.classList.remove('active'); countdownEl.style.visibility = ''; setTimeout(()=>{screamText.textContent='';screamActive=false;},1300); }
-function handleScreamTap() { if(!screamActive)return; clearTimeout(screamDrainAnim); dismissScream(); }
+function handleScreamTap() { if(!screamActive) return; clearTimeout(screamDrainAnim); dismissScream(); }
 screamOverlay.addEventListener('click', handleScreamTap);
 
+// ── Scream History ─────────────────────────────────────────
+// Server is the source of truth. History is rebuilt from server data on every poll.
+// Deleting a row from the Google Sheet removes it from all players within one poll cycle.
+const MAX_HISTORY = 3;
+const screamHistory = [];
+
+function saveHistory() {
+  localStorage.setItem('cobweb_history', JSON.stringify(screamHistory));
+}
+
+function tsToTimeStr(ts) {
+  return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+}
+
+// Rebuilds history from server screams, preserving any call entries already in history.
+// Called on every scream poll — handles both new arrivals and ST deletions.
+function syncScreamHistory(serverScreams) {
+  const callEntries = screamHistory.filter(e => e.isCall);
+  screamHistory.length = 0;
+  const screamEntries = serverScreams.map(s => ({
+    message: s.message,
+    time: tsToTimeStr(s.ts),
+    ts: s.ts,
+    isCall: false
+  }));
+  const merged = [...screamEntries, ...callEntries]
+    .sort((a, b) => (b.ts || 0) - (a.ts || 0))
+    .slice(0, MAX_HISTORY);
+  merged.forEach(e => screamHistory.push(e));
+  saveHistory();
+}
+
+// Rebuilds history from server calls, preserving any scream entries already in history.
+function syncCallHistory(serverCalls) {
+  const screamEntries = screamHistory.filter(e => !e.isCall);
+  screamHistory.length = 0;
+  const callEntries = serverCalls.map(c => ({
+    message: c.message,
+    sender: c.sender,
+    time: tsToTimeStr(c.ts),
+    ts: c.ts,
+    isCall: true
+  }));
+  const merged = [...screamEntries, ...callEntries]
+    .sort((a, b) => (b.ts || 0) - (a.ts || 0))
+    .slice(0, MAX_HISTORY);
+  merged.forEach(e => screamHistory.push(e));
+  saveHistory();
+}
+
 // ── Scream poller ──────────────────────────────────────────
-// FIX: persist lastScreamTs across page loads so missed messages are shown on return
 let lastScreamTs = parseInt(localStorage.getItem('cobweb_last_scream_ts') || '0');
+let screamHistoryInitialized = false;
 
 function pollScream() {
   fetch(SCRIPT_URL + '?type=scream&t=' + Date.now())
     .then(r => r.json())
     .then(data => {
-      if (!data.ts || !data.message) return
-      if (data.ts > lastScreamTs) {
-        lastScreamTs = data.ts
-        localStorage.setItem('cobweb_last_scream_ts', lastScreamTs)
-        showNotif(data.message)
+      if (!data.screams) return;
+      const screams = data.screams.filter(s => s.ts && s.message);
+
+      // Always sync — handles new messages AND deletions
+      syncScreamHistory(screams);
+
+      if (!screamHistoryInitialized) {
+        // First poll: silently populate history, light up dot if anything is there
+        screamHistoryInitialized = true;
+        if (screams.length > 0) {
+          lastScreamTs = Math.max(...screams.map(s => s.ts));
+          localStorage.setItem('cobweb_last_scream_ts', lastScreamTs);
+          echoesBtn.classList.add('has-new');
+        }
+        return;
+      }
+
+      // Subsequent polls: notify for anything new
+      const newScreams = screams.filter(s => s.ts > lastScreamTs);
+      if (newScreams.length > 0) {
+        lastScreamTs = Math.max(...screams.map(s => s.ts));
+        localStorage.setItem('cobweb_last_scream_ts', lastScreamTs);
+        echoesBtn.classList.add('has-new');
+        newScreams.forEach(s => queueNotif('scream', s.message));
       }
     })
-    .catch(() => {})
+    .catch(() => {});
 }
 
 function startScreamPoller() {
-  pollScream()
-  setInterval(pollScream, SCREAM_POLL_MS)
+  pollScream();
+  setInterval(pollScream, SCREAM_POLL_MS);
 }
 
- // ── CSV parsers ────────────────────────────────────────────
+// ── CSV parsers ────────────────────────────────────────────
 function parseCSV(text) {
   const rows=text.trim().split('\n'), regular=[], important=[];
   for(const row of rows){
@@ -954,7 +516,7 @@ function parseAudioCSV(text) { return text.trim().split('\n').map(r=>r.replace(/
 function loadMessagesFromSheet() {
   if(!SHEET_CSV_URL||SHEET_CSV_URL==='YOUR_GOOGLE_SHEETS_CSV_URL_HERE') return Promise.resolve();
   return fetch(SHEET_CSV_URL+'&t='+Date.now())
-    .then(r=>{ if(!r.ok)throw new Error('messages fetch failed'); return r.text(); })
+    .then(r=>{ if(!r.ok) throw new Error('messages fetch failed'); return r.text(); })
     .then(text=>{
       const {regular,important}=parseCSV(text);
       if(regular.length) MESSAGES=regular;
@@ -971,614 +533,499 @@ function loadMessagesFromSheet() {
     });
 }
 
- // ── Notifications ───────────────────────────────────────────
+// ── Notifications ──────────────────────────────────────────
 function requestNotifPermission() {
-  if (!('Notification' in window)) return
-  if (Notification.permission === 'granted') return
-  if (Notification.permission === 'denied') return
-  Notification.requestPermission()
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'granted') return;
+  if (Notification.permission === 'denied') return;
+  Notification.requestPermission();
 }
 
 function sendSystemNotif(message) {
-  if (!('Notification' in window)) return
-  if (Notification.permission !== 'granted') return
-  new Notification('The Cobweb', {
-    body: message,
-    icon: '/favicon.ico',
-    silent: false
-  })
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'granted') return;
+  new Notification('The Cobweb', { body: message, icon: '/favicon.ico', silent: false });
 }
 
- function showFirstTimeHint() {
-  if (localStorage.getItem('cobweb_welcomed')) return
-
-  const el = document.createElement('div')
-  el.id = 'first-hint'
-  el.style.cssText = `
-    position: fixed;
-    bottom: 60px;
-    left: 16px;
-    z-index: 20;
-    font-family: 'Uncial Antiqua', serif;
-    font-size: 12px;
-    letter-spacing: 0.2em;
-    color: rgba(160, 200, 230, 0.9);
-    text-transform: uppercase;
-    pointer-events: none;
-    animation: hint-pulse 2.5s ease-in-out infinite;
-  `
-  el.textContent = '↑ open your mind'
-  document.body.appendChild(el)
-
-  const style = document.createElement('style')
-  style.textContent = `
-    @keyframes hint-pulse {
-      0%, 100% { opacity: 0.2; }
-      50% { opacity: 0.7; }
-    }
-  `
-  document.head.appendChild(style)
+function showFirstTimeHint() {
+  if (localStorage.getItem('cobweb_welcomed')) return;
+  const el = document.createElement('div');
+  el.id = 'first-hint';
+  el.style.cssText = 'position:fixed;bottom:60px;left:16px;z-index:20;font-family:"Uncial Antiqua",serif;font-size:12px;letter-spacing:0.2em;color:rgba(160,200,230,0.9);text-transform:uppercase;pointer-events:none;animation:hint-pulse 2.5s ease-in-out infinite;';
+  el.textContent = '↑ open your mind';
+  document.body.appendChild(el);
+  const style = document.createElement('style');
+  style.textContent = '@keyframes hint-pulse{0%,100%{opacity:0.2;}50%{opacity:0.7;}}';
+  document.head.appendChild(style);
 }
- 
- // ── Glitches ────────────────────────────────────────────
- const GLITCH_CHARS = '█▓░▒#@$%&?!'
+
+// ── Glitches ───────────────────────────────────────────────
+const GLITCH_CHARS = '█▓░▒#@$%&?!';
 
 function glitchElement(el) {
-  const original = el.textContent
-  const chars = original.split('')
-  const numGlitches = 2 + Math.floor(Math.random() * 3)
+  const original = el.textContent;
+  const chars = original.split('');
+  const numGlitches = 2 + Math.floor(Math.random() * 3);
   for (let i = 0; i < numGlitches; i++) {
-    const pos = Math.floor(Math.random() * chars.length)
-    chars[pos] = GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)]
+    const pos = Math.floor(Math.random() * chars.length);
+    chars[pos] = GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)];
   }
-  el.textContent = chars.join('')
-  setTimeout(() => {
-    el.textContent = original
-  }, 200)
+  el.textContent = chars.join('');
+  setTimeout(() => { el.textContent = original; }, 200);
 }
 
 function runGlitches() {
-  const messages = document.querySelectorAll('.msg.visible')
+  const messages = document.querySelectorAll('.msg.visible');
   if (messages.length > 0) {
-    const target = messages[Math.floor(Math.random() * messages.length)]
-    glitchElement(target)
+    const target = messages[Math.floor(Math.random() * messages.length)];
+    glitchElement(target);
   }
-  setTimeout(runGlitches, 800 + Math.random() * 2000)
+  setTimeout(runGlitches, 800 + Math.random() * 2000);
 }
 
- // ── Vision ────────────────────────────────────────────────
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyscQgjEj5yr8KmFMchhnTsHkJOtv2QXxZERFZBSYBGbKmdHKTdxTTLq2Pd8C9nfrC4/exec'
-const VISION_POLL_MS = 4000
-let lastVisionTs = 0
-let visionFirstPoll = true
-let visionDismissTimer = null
+// ── Vision ─────────────────────────────────────────────────
+const VISION_POLL_MS = 4000;
+let lastVisionTs = 0;
+let visionFirstPoll = true;
+let visionDismissTimer = null;
 
-const visionOverlay = document.getElementById('vision-overlay')
-const visionImg     = document.getElementById('vision-img')
+const visionOverlay = document.getElementById('vision-overlay');
+const visionImg     = document.getElementById('vision-img');
 
 function showVision(url) {
-  visionImg.src = url
-  visionOverlay.classList.add('active')
-  visionOverlay.style.pointerEvents = 'all'
-  if (navigator.vibrate) navigator.vibrate([200, 100, 200])
-  if (visionDismissTimer) clearTimeout(visionDismissTimer)
-  visionDismissTimer = setTimeout(dismissVision, SCREAM_DURATION_MS)
+  visionImg.src = url;
+  visionOverlay.classList.add('active');
+  visionOverlay.style.pointerEvents = 'all';
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  if (visionDismissTimer) clearTimeout(visionDismissTimer);
+  visionDismissTimer = setTimeout(dismissVision, SCREAM_DURATION_MS);
 }
 
 function dismissVision() {
-  if (visionDismissTimer) { clearTimeout(visionDismissTimer); visionDismissTimer = null }
-  visionOverlay.classList.remove('active')
-  visionOverlay.style.pointerEvents = 'none'
-  setTimeout(() => { visionImg.src = '' }, 400)
+  if (visionDismissTimer) { clearTimeout(visionDismissTimer); visionDismissTimer = null; }
+  visionOverlay.classList.remove('active');
+  visionOverlay.style.pointerEvents = 'none';
+  setTimeout(() => { visionImg.src = ''; }, 400);
 }
 
-visionOverlay.addEventListener('click', dismissVision)
+visionOverlay.addEventListener('click', dismissVision);
 
 function pollVision() {
   fetch(SCRIPT_URL + '?type=vision&t=' + Date.now())
     .then(r => r.json())
     .then(data => {
-      if (!data.ts || !data.url) return
-      if (visionFirstPoll) { lastVisionTs = data.ts; visionFirstPoll = false; return }
-      if (data.ts > lastVisionTs) { lastVisionTs = data.ts; showVisionNotif(data.url) }
+      if (!data.ts || !data.url) return;
+      if (visionFirstPoll) { lastVisionTs = data.ts; visionFirstPoll = false; return; }
+      if (data.ts > lastVisionTs) { lastVisionTs = data.ts; queueNotif('vision', data.url); }
     })
-    .catch(() => {})
+    .catch(() => {});
 }
 
 function startVisionPoller() {
-  pollVision()
-  setInterval(pollVision, VISION_POLL_MS)
+  pollVision();
+  setInterval(pollVision, VISION_POLL_MS);
 }
 
- // ── Countdown ─────────────────────────────────────────────
-const COUNTDOWN_POLL_MS = 10000
-let countdownTarget = 0
-let countdownInterval = null
-const countdownEl = document.getElementById('countdown')
+// ── Countdown ──────────────────────────────────────────────
+const COUNTDOWN_POLL_MS = 10000;
+let countdownTarget = 0;
+let countdownInterval = null;
+const countdownEl = document.getElementById('countdown');
 
 function updateCountdown() {
-  if (!countdownTarget) return
-  const now = Date.now()
-  const diff = countdownTarget - now
+  if (!countdownTarget) return;
+  const now = Date.now();
+  const diff = countdownTarget - now;
   if (diff <= 0) {
-    countdownEl.classList.remove('active')
-    countdownTarget = 0
-    clearInterval(countdownInterval)
-    countdownInterval = null
-    return
+    countdownEl.classList.remove('active');
+    countdownTarget = 0;
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+    return;
   }
-  const h = Math.floor(diff / 3600000)
-  const m = Math.floor((diff % 3600000) / 60000)
-  const s = Math.floor((diff % 60000) / 1000)
-  document.getElementById('countdown-time').textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+  document.getElementById('countdown-time').textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
 
 function setCountdown(targetTime, label) {
-  countdownTarget = targetTime
-  if (countdownInterval) clearInterval(countdownInterval)
-  if (!targetTime || targetTime <= Date.now()) return
-  countdownEl.classList.add('active')
-  document.getElementById('countdown-label').textContent = label || ''
-  updateCountdown()
-  countdownInterval = setInterval(updateCountdown, 1000)
+  countdownTarget = targetTime;
+  if (countdownInterval) clearInterval(countdownInterval);
+  if (!targetTime || targetTime <= Date.now()) return;
+  countdownEl.classList.add('active');
+  document.getElementById('countdown-label').textContent = label || '';
+  updateCountdown();
+  countdownInterval = setInterval(updateCountdown, 1000);
 }
 
 function pollCountdown() {
   fetch(SCRIPT_URL + '?type=countdown&t=' + Date.now())
     .then(r => r.json())
     .then(data => {
-      if (!data.targetTime) return
-      if (data.targetTime !== countdownTarget) setCountdown(data.targetTime, data.label)
+      if (!data.targetTime) return;
+      if (data.targetTime !== countdownTarget) setCountdown(data.targetTime, data.label);
     })
-    .catch(() => {})
+    .catch(() => {});
 }
 
 function startCountdownPoller() {
-  pollCountdown()
-  setInterval(pollCountdown, COUNTDOWN_POLL_MS)
+  pollCountdown();
+  setInterval(pollCountdown, COUNTDOWN_POLL_MS);
 }
 
- // ── Scream History ─────────────────────────────────────────
-// FIX: restore history from localStorage so messages missed while app was closed are shown
-const screamHistory = JSON.parse(localStorage.getItem('cobweb_history') || '[]')
-const MAX_HISTORY = 3
-
-// FIX: persist history to localStorage whenever it changes
-function saveHistory() {
-  localStorage.setItem('cobweb_history', JSON.stringify(screamHistory))
-}
-
-function addToHistory(message) {
-  const now = new Date()
-  const timeStr = now.toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
-  })
-  screamHistory.unshift({ message, time: timeStr })
-  if (screamHistory.length > MAX_HISTORY) screamHistory.pop()
-  saveHistory() // FIX: persist after every add
-}
+// ── Echoes Panel ───────────────────────────────────────────
+const echoesBtn      = document.getElementById('echoes-btn');
+const echoesPanel    = document.getElementById('echoes-panel');
+const echoesBackdrop = document.getElementById('echoes-backdrop');
 
 function renderHistory() {
-  const list = document.getElementById('echoes-list')
-  if (!list) return
-
-  list.innerHTML = ''
-
+  const list = document.getElementById('echoes-list');
+  if (!list) return;
+  list.innerHTML = '';
   if (!screamHistory.length) {
-    const empty = document.createElement('div')
-    empty.className = 'echo-empty'
-    empty.textContent = 'silence so far'
-    list.appendChild(empty)
-    return
+    const empty = document.createElement('div');
+    empty.className = 'echo-empty';
+    empty.textContent = 'silence so far';
+    list.appendChild(empty);
+    return;
   }
-
- screamHistory.forEach((entry, i) => {
-    const div = document.createElement('div')
-    div.className = 'echo-entry' + (entry.isCall ? ' call-entry' : '')
-
-    const time = document.createElement('span')
-    time.className = 'echo-time'
-    time.textContent = entry.time
-    div.appendChild(time)
-
+  screamHistory.forEach((entry, i) => {
+    const div = document.createElement('div');
+    div.className = 'echo-entry' + (entry.isCall ? ' call-entry' : '');
+    const time = document.createElement('span');
+    time.className = 'echo-time';
+    time.textContent = entry.time;
+    div.appendChild(time);
     if (entry.isCall && entry.sender) {
-      const sender = document.createElement('span')
-      sender.className = 'echo-sender'
-      sender.textContent = entry.sender + ' speaks into the web'
-      div.appendChild(sender)
+      const sender = document.createElement('span');
+      sender.className = 'echo-sender';
+      sender.textContent = entry.sender + ' speaks into the web';
+      div.appendChild(sender);
     }
-
-    const msg = document.createElement('span')
-    msg.className = 'echo-msg' + (entry.isCall ? ' call-msg' : '')
-    msg.textContent = entry.message
-    div.appendChild(msg)
-    list.appendChild(div)
-
-    const delay = i * 160
-    setTimeout(() => {
-      requestAnimationFrame(() => {
-        div.classList.add('echo-visible')
-      })
-    }, delay)
-  })
+    const msg = document.createElement('span');
+    msg.className = 'echo-msg' + (entry.isCall ? ' call-msg' : '');
+    msg.textContent = entry.message;
+    div.appendChild(msg);
+    list.appendChild(div);
+    const delay = i * 160;
+    setTimeout(() => { requestAnimationFrame(() => { div.classList.add('echo-visible'); }); }, delay);
+  });
 }
 
-// ── Echoes Panel toggle ────────────────────────────────────
-const echoesBtn      = document.getElementById('echoes-btn')
-const echoesPanel    = document.getElementById('echoes-panel')
-const echoesBackdrop = document.getElementById('echoes-backdrop')
-
 function openEchoes() {
-  echoesPanel.classList.add('active')
-  echoesBackdrop.classList.add('active')
-  echoesBtn.classList.add('active')
-  echoesBtn.classList.remove('has-new')
-  requestAnimationFrame(() => renderHistory())
+  echoesPanel.classList.add('active');
+  echoesBackdrop.classList.add('active');
+  echoesBtn.classList.add('active');
+  echoesBtn.classList.remove('has-new');
+  requestAnimationFrame(() => renderHistory());
 }
 
 function closeEchoes() {
-  echoesPanel.classList.remove('active')
-  echoesBackdrop.classList.remove('active')
-  echoesBtn.classList.remove('active')
+  echoesPanel.classList.remove('active');
+  echoesBackdrop.classList.remove('active');
+  echoesBtn.classList.remove('active');
 }
 
 function toggleEchoes() {
-  echoesPanel.classList.contains('active') ? closeEchoes() : openEchoes()
+  echoesPanel.classList.contains('active') ? closeEchoes() : openEchoes();
 }
 
-echoesBtn.addEventListener('click', toggleEchoes)
-echoesBackdrop.addEventListener('click', closeEchoes)
+echoesBtn.addEventListener('click', toggleEchoes);
+echoesBackdrop.addEventListener('click', closeEchoes);
 
- // ── Attune Panel ───────────────────────────────────────────
-const attuneBtn      = document.getElementById('attune-btn')
-const attunePanel    = document.getElementById('attune-panel')
-const attuneBackdrop = document.getElementById('attune-backdrop')
+// ── Attune Panel ───────────────────────────────────────────
+const attuneBtn      = document.getElementById('attune-btn');
+const attunePanel    = document.getElementById('attune-panel');
+const attuneBackdrop = document.getElementById('attune-backdrop');
 
-const volAmbientSlider = document.getElementById('vol-ambient')
-const volVoicesSlider  = document.getElementById('vol-voices')
-const volSignalsSlider = document.getElementById('vol-signals')
+const volAmbientSlider = document.getElementById('vol-ambient');
+const volVoicesSlider  = document.getElementById('vol-voices');
+const volSignalsSlider = document.getElementById('vol-signals');
 
-volAmbientSlider.value = AMBIENT_VOLUME
-volVoicesSlider.value  = AUDIO_VOLUME
-volSignalsSlider.value = NOTIF_VOLUME
+volAmbientSlider.value = AMBIENT_VOLUME;
+volVoicesSlider.value  = AUDIO_VOLUME;
+volSignalsSlider.value = NOTIF_VOLUME;
 
-volAmbientSlider.addEventListener('input', () => {
-  AMBIENT_VOLUME = parseFloat(volAmbientSlider.value)
-  if (ambientAudio) ambientAudio.volume = AMBIENT_VOLUME
-  localStorage.setItem('cobweb_vol_ambient', AMBIENT_VOLUME)
-})
-volVoicesSlider.addEventListener('input', () => {
-  AUDIO_VOLUME = parseFloat(volVoicesSlider.value)
-  if (currentAudio) currentAudio.volume = AUDIO_VOLUME
-  localStorage.setItem('cobweb_vol_voices', AUDIO_VOLUME)
-})
-volSignalsSlider.addEventListener('input', () => {
-  NOTIF_VOLUME = parseFloat(volSignalsSlider.value)
-  if (iosNotifAudio) iosNotifAudio.volume = NOTIF_VOLUME
-  if (pendingNotifSound) pendingNotifSound.volume = NOTIF_VOLUME
-  localStorage.setItem('cobweb_vol_signals', NOTIF_VOLUME)
-})
+volAmbientSlider.addEventListener('input', () => { AMBIENT_VOLUME = parseFloat(volAmbientSlider.value); if (ambientAudio) ambientAudio.volume = AMBIENT_VOLUME; localStorage.setItem('cobweb_vol_ambient', AMBIENT_VOLUME); });
+volVoicesSlider.addEventListener('input',  () => { AUDIO_VOLUME   = parseFloat(volVoicesSlider.value);  if (currentAudio) currentAudio.volume = AUDIO_VOLUME;   localStorage.setItem('cobweb_vol_voices',  AUDIO_VOLUME); });
+volSignalsSlider.addEventListener('input', () => { NOTIF_VOLUME   = parseFloat(volSignalsSlider.value); if (iosNotifAudio) iosNotifAudio.volume = NOTIF_VOLUME; if (pendingNotifSound) pendingNotifSound.volume = NOTIF_VOLUME; localStorage.setItem('cobweb_vol_signals', NOTIF_VOLUME); });
 
-function openAttune()  {
-  updateAttuneName()
-  attunePanel.classList.add('active')
-  attuneBackdrop.classList.add('active')
-  attuneBtn.classList.add('active')
-}
-function closeAttune() {
-  attunePanel.classList.remove('active')
-  attuneBackdrop.classList.remove('active')
-  attuneBtn.classList.remove('active')
-}
-function toggleAttune() {
-  attunePanel.classList.contains('active') ? closeAttune() : openAttune()
-}
+function openAttune()  { updateAttuneName(); attunePanel.classList.add('active'); attuneBackdrop.classList.add('active'); attuneBtn.classList.add('active'); }
+function closeAttune() { attunePanel.classList.remove('active'); attuneBackdrop.classList.remove('active'); attuneBtn.classList.remove('active'); }
+function toggleAttune() { attunePanel.classList.contains('active') ? closeAttune() : openAttune(); }
 
-attuneBtn.addEventListener('click', toggleAttune)
-attuneBackdrop.addEventListener('click', closeAttune)
+attuneBtn.addEventListener('click', toggleAttune);
+attuneBackdrop.addEventListener('click', closeAttune);
 
- // ── Change name ────────────────────────────────────────────
 document.getElementById('change-name-btn').addEventListener('click', () => {
-  closeAttune()
-  localStorage.removeItem('cobweb_echo_name')
-  echoNameInput.value = ''
-  echoIdentityOverlay.style.display = 'flex'
-  echoIdentityOverlay.style.opacity = '1'
-  echoIdentityOverlay.classList.remove('hidden')
-  setTimeout(() => echoNameInput.focus(), 300)
-})
+  closeAttune();
+  localStorage.removeItem('cobweb_echo_name');
+  echoNameInput.value = '';
+  echoIdentityOverlay.style.display = 'flex';
+  echoIdentityOverlay.style.opacity = '1';
+  echoIdentityOverlay.classList.remove('hidden');
+  setTimeout(() => echoNameInput.focus(), 300);
+});
 
 function updateAttuneName() {
-  const nameEl = document.getElementById('attune-echo-name')
-  if (nameEl) nameEl.textContent = getEchoName() || 'unknown'
+  const nameEl = document.getElementById('attune-echo-name');
+  if (nameEl) nameEl.textContent = getEchoName() || 'unknown';
 }
 
- // ── The Call ───────────────────────────────────────────────
-const CALL_MAX_USES  = 3
-const CALL_POLL_MS   = 5000
+// ── The Call ───────────────────────────────────────────────
+const CALL_MAX_USES = 3;
+const CALL_POLL_MS  = 5000;
 
-let callUsesLeft     = parseInt(localStorage.getItem('cobweb_call_uses') ?? '3')
-// FIX: persist lastCallTs across page loads so missed calls are shown on return
-let lastCallTs       = parseInt(localStorage.getItem('cobweb_last_call_ts') || '0')
-let lastCallResetTs  = 0
-let callResetFirstPoll = true
+let callUsesLeft    = parseInt(localStorage.getItem('cobweb_call_uses') ?? '3');
+let lastCallTs      = parseInt(localStorage.getItem('cobweb_last_call_ts') || '0');
+let lastCallResetTs = 0;
+let callResetFirstPoll = true;
+let callHistoryInitialized = false;
 
-const callBtn             = document.getElementById('call-btn')
-const callPanel           = document.getElementById('call-panel')
-const callBackdrop        = document.getElementById('call-backdrop')
-const callTextarea        = document.getElementById('call-textarea')
-const callSentenceCounter = document.getElementById('call-sentence-counter')
-const callUsesDisplay     = document.getElementById('call-uses-display')
-const callSendBtn         = document.getElementById('call-send-btn')
-const callDepletedMsg     = document.getElementById('call-depleted-msg')
-
+const callBtn             = document.getElementById('call-btn');
+const callPanel           = document.getElementById('call-panel');
+const callBackdrop        = document.getElementById('call-backdrop');
+const callTextarea        = document.getElementById('call-textarea');
+const callSentenceCounter = document.getElementById('call-sentence-counter');
+const callUsesDisplay     = document.getElementById('call-uses-display');
+const callSendBtn         = document.getElementById('call-send-btn');
+const callDepletedMsg     = document.getElementById('call-depleted-msg');
 
 function updateCallUI() {
-  const depleted = callUsesLeft <= 0
-  callBtn.classList.toggle('depleted', depleted)
-  callUsesDisplay.textContent = depleted
-    ? 'no broadcasts remain'
-    : callUsesLeft === 1 ? '1 broadcast remains' : `${callUsesLeft} broadcasts remain`
-  callSendBtn.style.display      = depleted ? 'none'  : 'block'
-  callTextarea.style.display     = depleted ? 'none'  : 'block'
-  callSentenceCounter.style.display = depleted ? 'none' : 'block'
-  callDepletedMsg.style.display  = depleted ? 'block' : 'none'
+  const depleted = callUsesLeft <= 0;
+  callBtn.classList.toggle('depleted', depleted);
+  callUsesDisplay.textContent = depleted ? 'no broadcasts remain' : callUsesLeft === 1 ? '1 broadcast remains' : `${callUsesLeft} broadcasts remain`;
+  callSendBtn.style.display         = depleted ? 'none'  : 'block';
+  callTextarea.style.display        = depleted ? 'none'  : 'block';
+  callSentenceCounter.style.display = depleted ? 'none'  : 'block';
+  callDepletedMsg.style.display     = depleted ? 'block' : 'none';
 }
 
 callTextarea.addEventListener('input', () => {
-  const len = callTextarea.value.length
-  const remaining = 160 - len
-  callSentenceCounter.textContent = remaining === 1
-    ? '1 character remains'
-    : `${remaining} characters remain`
-  callSentenceCounter.style.color = remaining === 0
-    ? 'rgba(200,80,80,0.6)'
-    : remaining <= 30
-    ? 'rgba(220,190,80,0.5)'
-    : 'rgba(80,200,150,0.3)'
-  callSendBtn.disabled = len === 0 || len > 255
-})
+  const len = callTextarea.value.length;
+  const remaining = 160 - len;
+  callSentenceCounter.textContent = remaining === 1 ? '1 character remains' : `${remaining} characters remain`;
+  callSentenceCounter.style.color = remaining === 0 ? 'rgba(200,80,80,0.6)' : remaining <= 30 ? 'rgba(220,190,80,0.5)' : 'rgba(80,200,150,0.3)';
+  callSendBtn.disabled = len === 0 || len > 255;
+});
 
 async function sendCall() {
-  const message = callTextarea.value.trim()
-  if (!message || message.length > 160 || callUsesLeft <= 0) return
-  const sender = getEchoName() || 'unknown'
-  callSendBtn.disabled = true
-  callSendBtn.textContent = 'sending...'
+  const message = callTextarea.value.trim();
+  if (!message || message.length > 160 || callUsesLeft <= 0) return;
+  const sender = getEchoName() || 'unknown';
+  callSendBtn.disabled = true;
+  callSendBtn.textContent = 'sending...';
   try {
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify({ type: 'call', message, sender })
-    })
-    callUsesLeft--
-    localStorage.setItem('cobweb_call_uses', callUsesLeft)
-    callTextarea.value = ''
-    callSentenceCounter.textContent = '160 characters remain'
-    updateCallUI()
-    closeCall()
+    await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: 'call', message, sender }) });
+    callUsesLeft--;
+    localStorage.setItem('cobweb_call_uses', callUsesLeft);
+    callTextarea.value = '';
+    callSentenceCounter.textContent = '160 characters remain';
+    updateCallUI();
+    closeCall();
   } catch {
-    callSendBtn.disabled = false
-    callSendBtn.textContent = 'broadcast into the web'
-    return
+    callSendBtn.disabled = false;
+    callSendBtn.textContent = 'broadcast into the web';
+    return;
   }
-  callSendBtn.disabled = false
-  callSendBtn.textContent = 'broadcast into the web'
+  callSendBtn.disabled = false;
+  callSendBtn.textContent = 'broadcast into the web';
 }
 
-callSendBtn.addEventListener('click', sendCall)
+callSendBtn.addEventListener('click', sendCall);
 
-function openCall() {
-  updateCallUI()
-  callPanel.classList.add('active')
-  callBackdrop.classList.add('active')
-  callBtn.classList.add('active')
-  if (callUsesLeft > 0) setTimeout(() => callTextarea.focus(), 300)
-}
-function closeCall() {
-  callPanel.classList.remove('active')
-  callBackdrop.classList.remove('active')
-  callBtn.classList.remove('active')
-}
-function toggleCall() {
-  callPanel.classList.contains('active') ? closeCall() : openCall()
-}
-callBtn.addEventListener('click', toggleCall)
-callBackdrop.addEventListener('click', closeCall)
+function openCall()  { updateCallUI(); callPanel.classList.add('active'); callBackdrop.classList.add('active'); callBtn.classList.add('active'); if (callUsesLeft > 0) setTimeout(() => callTextarea.focus(), 300); }
+function closeCall() { callPanel.classList.remove('active'); callBackdrop.classList.remove('active'); callBtn.classList.remove('active'); }
+function toggleCall() { callPanel.classList.contains('active') ? closeCall() : openCall(); }
+callBtn.addEventListener('click', toggleCall);
+callBackdrop.addEventListener('click', closeCall);
 
 function spawnCallMessage(text, sender) {
-  const pos = randomPos()
-  const size = SIZES[Math.floor(Math.random() * (SIZES.length - 1))]
-  const rot  = (Math.random() - 0.5) * 3
-  const duration = calcDuration(text) * 1.4
-
-  const el = document.createElement('div')
-  el.className = `msg ${size} col-call`
-  el.textContent = text
-  el.style.left = (pos.x * 100) + '%'
-  el.style.top  = (pos.y * 100) + '%'
-  el.style.transform = `rotate(${rot}deg) translateY(6px)`
-  stage.appendChild(el)
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    el.style.transform = `rotate(${rot}deg) translateY(0)`
-    el.classList.add('visible')
-  }))
-
-  const attr = document.createElement('div')
-  attr.className = 'msg size-sm col-call'
-  attr.textContent = `— ${sender}`
-  attr.style.left = el.style.left
-  attr.style.top  = `calc(${el.style.top} + 3.2em)`
-  attr.style.transform = `rotate(${rot}deg) translateY(6px)`
-  attr.style.opacity = '0'
-  attr.style.transition = 'opacity 1s ease 0.5s, transform 1s ease 0.5s'
-  stage.appendChild(attr)
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    attr.style.opacity = '0.45'
-    attr.style.transform = `rotate(${rot}deg) translateY(0)`
-  }))
-
+  const pos = randomPos();
+  const size = SIZES[Math.floor(Math.random() * (SIZES.length - 1))];
+  const rot  = (Math.random() - 0.5) * 3;
+  const duration = calcDuration(text) * 1.4;
+  const el = document.createElement('div');
+  el.className = `msg ${size} col-call`;
+  el.textContent = text;
+  el.style.left = (pos.x * 100) + '%';
+  el.style.top  = (pos.y * 100) + '%';
+  el.style.transform = `rotate(${rot}deg) translateY(6px)`;
+  stage.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => { el.style.transform = `rotate(${rot}deg) translateY(0)`; el.classList.add('visible'); }));
+  const attr = document.createElement('div');
+  attr.className = 'msg size-sm col-call';
+  attr.textContent = `— ${sender}`;
+  attr.style.left = el.style.left;
+  attr.style.top  = `calc(${el.style.top} + 3.2em)`;
+  attr.style.transform = `rotate(${rot}deg) translateY(6px)`;
+  attr.style.opacity = '0';
+  attr.style.transition = 'opacity 1s ease 0.5s, transform 1s ease 0.5s';
+  stage.appendChild(attr);
+  requestAnimationFrame(() => requestAnimationFrame(() => { attr.style.opacity = '0.45'; attr.style.transform = `rotate(${rot}deg) translateY(0)`; }));
   setTimeout(() => {
-    el.classList.remove('visible'); el.classList.add('fading')
-    el.style.transform   = `rotate(${rot}deg) translateY(-5px)`
-    attr.style.opacity   = '0'
-    attr.style.transform = `rotate(${rot}deg) translateY(-5px)`
-    setTimeout(() => { el.remove(); attr.remove() }, 1500)
-  }, duration)
+    el.classList.remove('visible'); el.classList.add('fading');
+    el.style.transform   = `rotate(${rot}deg) translateY(-5px)`;
+    attr.style.opacity   = '0';
+    attr.style.transform = `rotate(${rot}deg) translateY(-5px)`;
+    setTimeout(() => { el.remove(); attr.remove(); }, 1500);
+  }, duration);
 }
 
-function addCallToHistory(message, sender) {
-  const now = new Date()
-  const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
-  screamHistory.unshift({ message, time: timeStr, sender, isCall: true })
-  if (screamHistory.length > MAX_HISTORY) screamHistory.pop()
-  saveHistory() // FIX: persist after every add
-}
-
-function showCallNotif(message, sender) { queueNotif('call', message, sender) }
-
+// ── Call poller ────────────────────────────────────────────
 function pollCall() {
   fetch(SCRIPT_URL + '?type=call&t=' + Date.now())
     .then(r => r.json())
     .then(data => {
-      // Check for ST reset
+      // Handle ST reset
       if (data.resetTs) {
         if (callResetFirstPoll) {
-          callResetFirstPoll = false
-          const storedResetTs = parseInt(localStorage.getItem('cobweb_call_reset_ts') ?? '0')
+          callResetFirstPoll = false;
+          const storedResetTs = parseInt(localStorage.getItem('cobweb_call_reset_ts') ?? '0');
           if (data.resetTs > storedResetTs) {
-            callUsesLeft = CALL_MAX_USES
-            localStorage.setItem('cobweb_call_uses', callUsesLeft)
-            updateCallUI()
+            callUsesLeft = CALL_MAX_USES;
+            localStorage.setItem('cobweb_call_uses', callUsesLeft);
+            updateCallUI();
           }
-          lastCallResetTs = data.resetTs
-          localStorage.setItem('cobweb_call_reset_ts', lastCallResetTs)
+          lastCallResetTs = data.resetTs;
+          localStorage.setItem('cobweb_call_reset_ts', lastCallResetTs);
         } else if (data.resetTs > lastCallResetTs) {
-          lastCallResetTs = data.resetTs
-          localStorage.setItem('cobweb_call_reset_ts', lastCallResetTs)
-          callUsesLeft = CALL_MAX_USES
-          localStorage.setItem('cobweb_call_uses', callUsesLeft)
-          updateCallUI()
+          lastCallResetTs = data.resetTs;
+          localStorage.setItem('cobweb_call_reset_ts', lastCallResetTs);
+          callUsesLeft = CALL_MAX_USES;
+          localStorage.setItem('cobweb_call_uses', callUsesLeft);
+          updateCallUI();
         }
       }
-      // FIX: no more callFirstPoll guard — lastCallTs persists across loads
-      // so the ts comparison alone correctly catches any missed messages
-      if (!data.ts || !data.message) return
-      if (data.ts > lastCallTs) {
-        lastCallTs = data.ts
-        localStorage.setItem('cobweb_last_call_ts', lastCallTs) // FIX: persist
-        spawnCallMessage(data.message, data.sender)
-        showCallNotif(data.message, data.sender)
+
+      if (!data.calls) return;
+      const calls = data.calls.filter(c => c.ts && c.message);
+
+      // Always sync — handles new calls AND ST deletions
+      syncCallHistory(calls);
+
+      if (!callHistoryInitialized) {
+        // First poll: silently populate history, light up dot if there's content
+        callHistoryInitialized = true;
+        if (calls.length > 0) {
+          lastCallTs = Math.max(...calls.map(c => c.ts));
+          localStorage.setItem('cobweb_last_call_ts', lastCallTs);
+          echoesBtn.classList.add('has-new');
+        }
+        return;
+      }
+
+      // Subsequent polls: notify and spawn for new calls only
+      const newCalls = calls.filter(c => c.ts > lastCallTs);
+      if (newCalls.length > 0) {
+        lastCallTs = Math.max(...calls.map(c => c.ts));
+        localStorage.setItem('cobweb_last_call_ts', lastCallTs);
+        echoesBtn.classList.add('has-new');
+        newCalls.forEach(c => {
+          spawnCallMessage(c.message, c.sender);
+          queueNotif('call', c.message, c.sender);
+        });
       }
     })
-    .catch(() => {})
+    .catch(() => {});
 }
 
 function startCallPoller() {
-  pollCall()
-  setInterval(pollCall, CALL_POLL_MS)
+  pollCall();
+  setInterval(pollCall, CALL_POLL_MS);
 }
- 
+
 // ── startApp ───────────────────────────────────────────────
 function startApp() {
   resizeWeb();
-  runGlitches()
+  runGlitches();
   const isMobile = window.innerWidth < 480;
   setTimeout(() => spawnMessage(), 200);
   if (!isMobile) setTimeout(() => spawnMessage(), 900);
   setTimeout(() => spawnMessage(), isMobile ? 1400 : 1600);
   scheduleNext();
-  if(IMPORTANT_MESSAGES.length>0) setTimeout(()=>{ spawnImportant(); scheduleNextImportant(); },10000);
+  if (IMPORTANT_MESSAGES.length > 0) setTimeout(() => { spawnImportant(); scheduleNextImportant(); }, 10000);
   startScreamPoller();
   startVisionPoller();
-  startCountdownPoller()
-  startCallPoller()
-  showFirstTimeHint()
-
-  // FIX: if history was restored from localStorage, light up the echoes dot
-  if (screamHistory.length > 0) {
-    echoesBtn.classList.add('has-new')
-  }
+  startCountdownPoller();
+  startCallPoller();
+  showFirstTimeHint();
 }
 
 // ── Boot ───────────────────────────────────────────────────
 const bootFetchJobs = [loadMessagesFromSheet()];
 
-if(AUDIO_CSV_URL&&AUDIO_CSV_URL!=='YOUR_AUDIO_TAB_CSV_URL_HERE') {
+if (AUDIO_CSV_URL && AUDIO_CSV_URL !== 'YOUR_AUDIO_TAB_CSV_URL_HERE') {
   bootFetchJobs.push(
     fetch(AUDIO_CSV_URL)
-      .then(r=>{ if(!r.ok)throw new Error('audio fetch failed'); return r.text(); })
-      .then(text=>{ const ids=parseAudioCSV(text); if(ids.length)AUDIO_FILE_IDS=ids; })
-      .catch(()=>{})
+      .then(r => { if (!r.ok) throw new Error('audio fetch failed'); return r.text(); })
+      .then(text => { const ids = parseAudioCSV(text); if (ids.length) AUDIO_FILE_IDS = ids; })
+      .catch(() => {})
   );
 }
 
-Promise.allSettled(bootFetchJobs).then(()=>{
+Promise.allSettled(bootFetchJobs).then(() => {
   startApp();
   setInterval(loadMessagesFromSheet, 10000);
-  
-  const params = new URLSearchParams(window.location.search)
-  const screamMessage = params.get('scream')
-  if (screamMessage) {
-    showNotif(screamMessage)
-  }
+  const params = new URLSearchParams(window.location.search);
+  const screamMessage = params.get('scream');
+  if (screamMessage) queueNotif('scream', screamMessage);
 });
 
- // ── Echo Identity ──────────────────────────────────────
-const echoIdentityOverlay = document.getElementById('echo-identity')
-const echoNameInput       = document.getElementById('echo-name-input')
-const echoNameBtn         = document.getElementById('echo-name-btn')
+// ── Echo Identity ──────────────────────────────────────────
+const echoIdentityOverlay = document.getElementById('echo-identity');
+const echoNameInput       = document.getElementById('echo-name-input');
+const echoNameBtn         = document.getElementById('echo-name-btn');
 
 function getEchoName() {
-  return localStorage.getItem('cobweb_echo_name') || null
+  return localStorage.getItem('cobweb_echo_name') || null;
 }
 
 function submitEchoName() {
-  const name = echoNameInput.value.trim()
-  if (!name) return
-  localStorage.setItem('cobweb_echo_name', name)
-  updateAttuneName()
-  callBtn.classList.add('visible')
-  echoIdentityOverlay.classList.add('hidden')
-  setTimeout(() => echoIdentityOverlay.style.display = 'none', 900)
+  const name = echoNameInput.value.trim();
+  if (!name) return;
+  localStorage.setItem('cobweb_echo_name', name);
+  updateAttuneName();
+  callBtn.classList.add('visible');
+  echoIdentityOverlay.classList.add('hidden');
+  setTimeout(() => echoIdentityOverlay.style.display = 'none', 900);
 }
 
-echoNameBtn.addEventListener('click', submitEchoName)
-echoNameInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitEchoName() })
+echoNameBtn.addEventListener('click', submitEchoName);
+echoNameInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitEchoName(); });
 
-// Show overlay or skip if name already known
 if (getEchoName()) {
-  echoIdentityOverlay.style.display = 'none'
-  callBtn.classList.add('visible')
+  echoIdentityOverlay.style.display = 'none';
+  callBtn.classList.add('visible');
 } else {
-  setTimeout(() => echoNameInput.focus(), 500)
+  setTimeout(() => echoNameInput.focus(), 500);
 }
 
 // ── Cursor ─────────────────────────────────────────────────
-const cursor=document.getElementById('cursor');
-document.addEventListener('mousemove',e=>{ cursor.style.left=e.clientX+'px'; cursor.style.top=e.clientY+'px'; });
+const cursor = document.getElementById('cursor');
+document.addEventListener('mousemove', e => { cursor.style.left = e.clientX + 'px'; cursor.style.top = e.clientY + 'px'; });
 document.addEventListener('click', e => {
-  if (e.target.closest('#listen-btn')) return
-  if (e.target.closest('#echoes-btn')) return
-  if (e.target.closest('#echoes-panel')) return
-  if (e.target.closest('#echoes-backdrop')) return
-  if (e.target.closest('#notif-banner')) return
-  if (e.target.closest('#scream-overlay')) return
-  if (e.target.closest('#vision-overlay')) return
-  if (e.target.closest('#attune-btn')) return
-  if (e.target.closest('#attune-panel')) return
-  if (e.target.closest('#attune-backdrop')) return
-  if (e.target.closest('#echo-identity')) return
-  if (e.target.closest('#call-btn')) return
-  if (e.target.closest('#call-panel')) return
-  if (e.target.closest('#call-backdrop')) return
-  spawnMessage()
-})
+  if (e.target.closest('#listen-btn')) return;
+  if (e.target.closest('#echoes-btn')) return;
+  if (e.target.closest('#echoes-panel')) return;
+  if (e.target.closest('#echoes-backdrop')) return;
+  if (e.target.closest('#notif-banner')) return;
+  if (e.target.closest('#scream-overlay')) return;
+  if (e.target.closest('#vision-overlay')) return;
+  if (e.target.closest('#attune-btn')) return;
+  if (e.target.closest('#attune-panel')) return;
+  if (e.target.closest('#attune-backdrop')) return;
+  if (e.target.closest('#echo-identity')) return;
+  if (e.target.closest('#call-btn')) return;
+  if (e.target.closest('#call-panel')) return;
+  if (e.target.closest('#call-backdrop')) return;
+  spawnMessage();
+});
 
- // ── Register service worker ─────────────────────────────
+// ── Service worker ─────────────────────────────────────────
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('service-worker.js')
+  navigator.serviceWorker.register('service-worker.js');
 }
 </script>
 </body>
