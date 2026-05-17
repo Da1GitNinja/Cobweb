@@ -220,7 +220,7 @@ const AUDIO_CSV_URL  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGPc7hK
 const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbyscQgjEj5yr8KmFMchhnTsHkJOtv2QXxZERFZBSYBGbKmdHKTdxTTLq2Pd8C9nfrC4/exec';
 
 const SCREAM_DURATION_MS = 30000;
-const SCREAM_POLL_MS     = 3000;
+const SCREAM_POLL_MS     = 8000;
 const AUDIO_MIN_GAP_MS   = 10000;
 const AUDIO_MAX_GAP_MS   = 15000;
 const AMBIENT_URL        = '/Cobweb/audio/Ambientlong.mp3';
@@ -557,7 +557,7 @@ function runGlitches() {
 }
 
 // ── Vision ─────────────────────────────────────────────────
-const VISION_POLL_MS = 4000;
+const VISION_POLL_MS = 8000;
 let lastVisionTs = 0;
 let visionFirstPoll = true;
 let visionDismissTimer = null;
@@ -600,7 +600,7 @@ function startVisionPoller() {
 }
 
 // ── Countdown ──────────────────────────────────────────────
-const COUNTDOWN_POLL_MS = 10000;
+const COUNTDOWN_POLL_MS = 30000;
 let countdownTarget = 0;
 let countdownInterval = null;
 const countdownEl = document.getElementById('countdown');
@@ -716,7 +716,7 @@ if (AUDIO_CSV_URL && AUDIO_CSV_URL !== 'YOUR_AUDIO_TAB_CSV_URL_HERE') {
 
 Promise.allSettled(bootFetchJobs).then(() => {
   startApp();
-  setInterval(loadMessagesFromSheet, 10000);
+  setInterval(loadMessagesFromSheet, 60000);
   const params = new URLSearchParams(window.location.search);
   const screamMessage = params.get('scream');
   if (screamMessage) queueNotif('scream', screamMessage);
