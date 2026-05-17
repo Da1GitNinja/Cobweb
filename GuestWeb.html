@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Cobweb</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#06080a">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Uncial+Antiqua&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --bg: #06080a; --fog: #0d1117; --thread: rgba(180,190,200,0.07); --glow: rgba(160,200,255,0.12); }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); font-family: 'Special Elite','Courier New',monospace; cursor: none; }
+  body { position: fixed; inset: 0; }
+  body::before { content: ''; position: fixed; inset: 0; z-index: 0; background: radial-gradient(ellipse 80% 60% at 20% 80%,rgba(10,20,40,0.8) 0%,transparent 70%),radial-gradient(ellipse 60% 80% at 80% 20%,rgba(5,15,30,0.8) 0%,transparent 70%),radial-gradient(ellipse 100% 100% at 50% 50%,#06080a 0%,#030507 100%); pointer-events: none; }
+  #web-canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+  #stage { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
+  .msg { position: absolute; max-width: min(420px,80vw); font-family: 'Special Elite',monospace; line-height: 1.55; pointer-events: none; opacity: 0; transition: opacity 0.9s ease,transform 0.9s ease; text-shadow: 0 0 20px currentColor; user-select: none; }
+  .msg.visible { opacity: 1; }
+  .msg.fading  { opacity: 0; transition: opacity 1.4s ease,transform 1.4s ease; }
+  .msg.size-sm { font-size: clamp(13px,1.8vw,13px); }
+  .msg.size-md { font-size: clamp(15px,2.2vw,16px); }
+  .msg.size-lg { font-size: clamp(17px,2.8vw,20px); }
+  .msg.size-xl { font-size: clamp(22px,4vw,28px); letter-spacing: 0.05em; }
+  .msg.col-pale   { color: rgba(200,215,230,0.55); }
+  .msg.col-silver { color: rgba(160,180,200,0.45); }
+  .msg.col-cold   { color: rgba(140,195,220,0.50); }
+  .msg.col-ghost  { color: rgba(220,220,240,0.35); }
+  .msg.col-amber  { color: rgba(220,190,130,0.45); }
+  .msg.col-blood  { color: rgba(190,60,60,0.55); }
+  .msg.col-bright { color: rgba(230,240,255,0.80); }
+  .msg.important { color: rgba(210,40,40,0.95) !important; text-shadow: 0 0 18px rgba(200,0,0,0.7),0 0 40px rgba(160,0,0,0.35); text-align: center; left: 50% !important; max-width: min(600px,90vw); letter-spacing: 0.06em; }
+  #cursor { position: fixed; z-index: 100; width: 6px; height: 6px; border-radius: 50%; background: rgba(180,200,255,0.6); box-shadow: 0 0 12px rgba(180,200,255,0.4); pointer-events: none; transform: translate(-50%,-50%); }
+  #scream-overlay { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 28px; background: radial-gradient(ellipse at center,rgba(60,0,0,0.97) 0%,rgba(10,0,0,0.99) 100%); opacity: 0; pointer-events: none; transition: opacity 1.2s ease; touch-action: manipulation; }
+  #scream-overlay.active { opacity: 1; pointer-events: all; }
+  #scream-text { font-family: 'Special Elite',monospace; font-size: clamp(22px,5vw,52px); color: #fff; text-align: center; max-width: min(760px,88vw); line-height: 1.4; letter-spacing: 0.04em; text-shadow: 0 0 30px rgba(255,60,60,0.9),0 0 80px rgba(200,0,0,0.5),0 0 160px rgba(160,0,0,0.25); opacity: 0; transform: scale(0.94); transition: opacity 1s ease 0.4s,transform 1s ease 0.4s; }
+  #scream-overlay.active #scream-text { opacity: 1; transform: scale(1); }
+  #scream-timer { font-family: 'Uncial Antiqua',serif; font-size: 11px; letter-spacing: 0.4em; color: rgba(200,80,80,0.4); text-transform: uppercase; opacity: 0; transition: opacity 0.5s ease 1s; }
+  #scream-overlay.active #scream-timer { opacity: 1; }
+  #scream-drain { position: absolute; bottom: 0; left: 0; height: 3px; width: 100%; background: linear-gradient(90deg,rgba(220,0,0,0.9) 0%,rgba(180,0,0,0.6) 100%); transform-origin: left; transform: scaleX(1); }
+  #sigil { position: fixed; top: 18px; right: 24px; z-index: 10; font-family: 'Uncial Antiqua',serif; font-size: 11px; letter-spacing: 0.3em; color: rgba(140,160,180,0.2); text-transform: uppercase; pointer-events: none; }
+
+  /* ── Listen: centred along the bottom ── */
+  #listen-btn {
+    position: fixed;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    font-family: 'Uncial Antiqua',serif;
+    font-size: 24px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(140,160,180,0.3);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 14px 8px;
+    transition: color 0.6s ease;
+    user-select: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #listen-btn:hover { color: rgba(160,200,230,0.65); }
+  #listen-btn.audio-on { color: rgba(160,200,230,0.55); text-shadow: 0 0 10px rgba(140,190,255,0.9),0 0 25px rgba(140,190,255,0.6),0 0 50px rgba(140,190,255,0.3); }
+  #listen-btn.audio-on::before { content: '·'; margin-right: 6px; animation: pulse-dot 2s ease-in-out infinite; }
+  @keyframes pulse-dot { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+  #notif-banner { position: fixed; top: -80px; left: 0; right: 0; z-index: 9999; background: rgba(160, 0, 0, 0.92); color: rgba(255, 230, 230, 0.95); text-align: center; padding: 18px 24px; font-family: 'Special Elite', monospace; font-size: 15px; letter-spacing: 0.12em; cursor: pointer; touch-action: manipulation; transition: top 0.4s ease; text-shadow: 0 0 12px rgba(255,100,100,0.5); }
+  #notif-banner.active { top: 0; }
+  #vision-overlay { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, rgba(0,10,40,1) 0%, rgba(0,0,15,1) 100%); opacity: 0; pointer-events: none; transition: opacity 1.2s ease; }
+  #vision-overlay.active { opacity: 1; pointer-events: all; }
+  #vision-img { max-width: 100%; max-height: 100%; object-fit: contain; filter: contrast(1.1) brightness(0.9); }
+  #countdown { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 50; font-family: 'Uncial Antiqua', serif; font-size: clamp(28px, 6vw, 52px); letter-spacing: 0.15em; color: rgba(180, 200, 220, 0.35); text-shadow: 0 0 20px rgba(140, 180, 255, 0.15); pointer-events: none; opacity: 0; transition: opacity 2s ease; }
+  #countdown.active { opacity: 1; }
+  #countdown-label { font-size: clamp(11px, 1.5vw, 14px); letter-spacing: 0.3em; text-transform: uppercase; color: rgba(180, 200, 220, 0.25); text-align: center; margin-top: 10px; }
+
+  /* ── Attune: bottom-left (where listen used to live) ── */
+  #attune-btn {
+    position: fixed;
+    bottom: 22px;
+    left: 24px;
+    z-index: 10;
+    font-family: 'Uncial Antiqua', serif;
+    font-size: 24px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(140, 160, 180, 0);
+    background: none;
+    border: none;
+    min-width: 64px;
+    min-height: 44px;
+    padding: 14px 8px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    cursor: pointer;
+    user-select: none;
+    pointer-events: none;
+    transition: color 1.2s ease, text-shadow 0.6s ease;
+  }
+  #attune-btn.visible { color: rgba(140, 160, 180, 0.3); pointer-events: all; }
+  #attune-btn.active { color: rgba(200, 165, 80, 0.8); text-shadow: 0 0 10px rgba(220, 180, 80, 0.45), 0 0 28px rgba(200, 140, 40, 0.2); }
+  #attune-backdrop { display: none; position: fixed; inset: 0; z-index: 40; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  #attune-backdrop.active { display: block; }
+  /* Panel anchors from bottom-left, above the attune button */
+  #attune-panel {
+    position: fixed;
+    bottom: 70px;
+    left: 16px;
+    z-index: 50;
+    width: min(270px, calc(100vw - 32px));
+    padding: 20px 22px;
+    background: rgba(6, 4, 12, 0.94);
+    border: 1px solid rgba(200, 160, 80, 0.12);
+    box-shadow: 0 0 40px rgba(160, 110, 20, 0.08), inset 0 0 20px rgba(0, 0, 0, 0.3);
+    font-family: 'Special Elite', monospace;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(8px);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+  #attune-panel.active { opacity: 1; pointer-events: all; transform: translateY(0); }
+  #attune-title { font-family: 'Uncial Antiqua', serif; font-size: 11px; letter-spacing: 0.35em; text-transform: uppercase; color: rgba(200, 160, 80, 0.35); margin-bottom: 18px; border-bottom: 1px solid rgba(200, 160, 80, 0.1); padding-bottom: 10px; }
+  .attune-row { margin-bottom: 18px; }
+  .attune-row:last-child { margin-bottom: 0; }
+  .attune-label { display: block; font-family: 'Uncial Antiqua', serif; font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(200, 160, 80, 0.5); margin-bottom: 2px; }
+  .attune-sublabel { display: block; font-size: 11px; color: rgba(160, 150, 130, 0.3); letter-spacing: 0.08em; margin-bottom: 9px; font-style: italic; }
+  .attune-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 1px; background: rgba(200, 160, 80, 0.18); outline: none; border: none; cursor: pointer; display: block; }
+  .attune-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 8px; height: 8px; border-radius: 50%; background: rgba(210, 175, 95, 0.85); box-shadow: 0 0 8px rgba(200, 160, 60, 0.65), 0 0 18px rgba(180, 130, 40, 0.3); cursor: pointer; }
+  .attune-slider::-moz-range-thumb { width: 8px; height: 8px; border-radius: 50%; background: rgba(210, 175, 95, 0.85); box-shadow: 0 0 8px rgba(200, 160, 60, 0.65); border: none; cursor: pointer; }
+
+  @media (max-width: 480px) {
+    #listen-btn, #attune-btn { font-size: 11px; letter-spacing: 0.18em; padding: 10px 6px; min-width: 44px; min-height: 44px; }
+    #attune-btn { left: 14px; }
+    .msg { max-width: min(260px, 72vw); }
+    .msg.size-xl { font-size: 18px; }
+    .msg.size-lg { font-size: 15px; }
+    .msg.size-md { font-size: 13px; }
+    .msg.size-sm { font-size: 12px; }
+  }
+
+  #echo-identity { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; background: var(--bg); transition: opacity 0.8s ease; }
+  #echo-identity.hidden { opacity: 0; pointer-events: none; }
+  #echo-identity-title { font-family: 'Uncial Antiqua', serif; font-size: 13px; letter-spacing: 0.35em; color: rgba(140,160,180,0.35); text-transform: uppercase; text-align: center; }
+  #echo-identity-sub { font-family: 'Special Elite', monospace; font-size: 11px; letter-spacing: 0.2em; color: rgba(100,120,140,0.3); text-transform: uppercase; text-align: center; max-width: 260px; line-height: 1.8; }
+  #echo-name-input { background: transparent; border: none; border-bottom: 1px solid rgba(160,180,210,0.2); color: rgba(200,215,230,0.8); font-family: 'Special Elite', monospace; font-size: 18px; letter-spacing: 0.15em; padding: 10px 4px; width: 240px; text-align: center; outline: none; }
+  #echo-name-input::placeholder { color: rgba(120,140,160,0.25); }
+  #echo-name-input:focus { border-bottom-color: rgba(160,180,210,0.5); }
+  #echo-name-btn { font-family: 'Uncial Antiqua', serif; font-size: 11px; letter-spacing: 0.35em; text-transform: uppercase; color: rgba(140,160,180,0.3); background: none; border: none; cursor: pointer; padding: 8px; transition: color 0.4s ease; }
+  #echo-name-btn:hover { color: rgba(160,200,230,0.6); }
+</style>
+</head>
+<body>
+
+<div id="echo-identity">
+  <div id="echo-identity-title">The Cobweb stirs</div>
+  <div id="echo-identity-sub">the network seeks your resonance<br>who stirs in the web?</div>
+  <input id="echo-name-input" type="text" placeholder="your name" maxlength="40" autocomplete="off" spellcheck="false" />
+  <button id="echo-name-btn">enter the web</button>
+</div>
+
+<canvas id="web-canvas"></canvas>
+<div id="stage"></div>
+<div id="cursor"></div>
+<div id="sigil">cobweb</div>
+
+<!-- Listen: centred bottom -->
+<button id="listen-btn">listen</button>
+
+<!-- Attune: bottom-left -->
+<button id="attune-btn" aria-label="Attune audio levels">attune</button>
+<div id="attune-panel" role="dialog" aria-label="Audio levels">
+  <div id="attune-title">attune the signal</div>
+  <div class="attune-row">
+    <label class="attune-label">ambient</label>
+    <span class="attune-sublabel">the world beneath</span>
+    <input class="attune-slider" id="vol-ambient" type="range" min="0" max="1" step="0.01">
+  </div>
+  <div class="attune-row">
+    <label class="attune-label">voices</label>
+    <span class="attune-sublabel">the signal</span>
+    <input class="attune-slider" id="vol-voices" type="range" min="0" max="1" step="0.01">
+  </div>
+  <div class="attune-row">
+    <label class="attune-label">signals</label>
+    <span class="attune-sublabel">the call</span>
+    <input class="attune-slider" id="vol-signals" type="range" min="0" max="1" step="0.01">
+  </div>
+  <div class="attune-row" style="margin-top: 8px; border-top: 1px solid rgba(200,160,80,0.08); padding-top: 16px;">
+    <span class="attune-label">resonance</span>
+    <span class="attune-sublabel" id="attune-echo-name" style="margin-bottom: 12px;"></span>
+    <button id="change-name-btn" style="background: none; border: none; font-family: 'Uncial Antiqua', serif; font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(200,160,80,0.3); cursor: pointer; padding: 4px 0; transition: color 0.3s ease;">change resonance</button>
+  </div>
+</div>
+<div id="attune-backdrop"></div>
+
+<div id="notif-banner">tap to receive transmission</div>
+
+<div id="countdown">
+  <div id="countdown-time"></div>
+  <div id="countdown-label"></div>
+</div>
+
+<div id="vision-overlay">
+  <img id="vision-img" src="" alt="" />
+</div>
+
+<div id="scream-overlay">
+  <div id="scream-text"></div>
+  <div id="scream-timer">fading in 30 seconds</div>
+  <div id="scream-drain"></div>
+</div>
+
+<script>
+'use strict';
+
+const SHEET_CSV_URL  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGPc7hKXGZ1FKR8E0Vnks6W0NdTVB00eaR6C4Tqi_cqVSwOLZYwIjs1yeCym_p3se6kN7JyVqc5ZXp/pub?gid=0&single=true&output=csv';
+const AUDIO_CSV_URL  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTGPc7hKXGZ1FKR8E0Vnks6W0NdTVB00eaR6C4Tqi_cqVSwOLZYwIjs1yeCym_p3se6kN7JyVqc5ZXp/pub?gid=2041856543&single=true&output=csv';
+const SCRIPT_URL     = 'https://script.google.com/macros/s/AKfycbyscQgjEj5yr8KmFMchhnTsHkJOtv2QXxZERFZBSYBGbKmdHKTdxTTLq2Pd8C9nfrC4/exec';
+
+const SCREAM_DURATION_MS = 30000;
+const SCREAM_POLL_MS     = 3000;
+const AUDIO_MIN_GAP_MS   = 10000;
+const AUDIO_MAX_GAP_MS   = 15000;
+const AMBIENT_URL        = '/Cobweb/audio/Ambientlong.mp3';
+const NOTIF_SOUND_URL    = 'https://www.dropbox.com/scl/fi/3bc5wshigba9axgs37306/102308_1306869-lq.mp3?rlkey=b9y9uo999h6fp4gkn1r3htr33&st=6wcw4swl&raw=1';
+
+let AUDIO_VOLUME   = parseFloat(localStorage.getItem('cobweb_vol_voices')  ?? '0.18');
+let AMBIENT_VOLUME = parseFloat(localStorage.getItem('cobweb_vol_ambient') ?? '0.50');
+let NOTIF_VOLUME   = parseFloat(localStorage.getItem('cobweb_vol_signals') ?? '0.60');
+
+let MESSAGES           = ["the signal is lost","no messages found","the feed is empty","waiting for transmission","this is a test"];
+let IMPORTANT_MESSAGES = ["connection failed"];
+let AUDIO_FILE_IDS     = [];
+
+// ── Web canvas ─────────────────────────────────────────────
+const webCanvas = document.getElementById('web-canvas');
+const wCtx = webCanvas.getContext('2d');
+let nodes = [];
+
+function resizeWeb() { webCanvas.width = window.innerWidth; webCanvas.height = window.innerHeight; buildWeb(); }
+
+function buildWeb() {
+  const W = webCanvas.width, H = webCanvas.height;
+  nodes = [];
+  const anchors = [[0,0],[W*.3,0],[W*.6,0],[W,0],[W,H*.3],[W,H*.7],[W,H],[W*.7,H],[W*.35,H],[0,H],[0,H*.65],[0,H*.3],[W*.22,H*.18],[W*.75,H*.22],[W*.15,H*.7],[W*.8,H*.75],[W*.5,H*.5]];
+  anchors.forEach(([x,y]) => nodes.push({x,y}));
+  wCtx.clearRect(0,0,W,H);
+  for (let i=0;i<nodes.length;i++) for (let j=i+1;j<nodes.length;j++) {
+    const dx=nodes[i].x-nodes[j].x, dy=nodes[i].y-nodes[j].y, dist=Math.hypot(dx,dy);
+    if (dist < W*.45) {
+      const alpha=(1-dist/(W*.45))*.09;
+      wCtx.strokeStyle=`rgba(160,180,210,${alpha})`; wCtx.lineWidth=.6; wCtx.beginPath();
+      const mx=(nodes[i].x+nodes[j].x)/2+(Math.random()-.5)*40, my=(nodes[i].y+nodes[j].y)/2+(Math.random()-.5)*40;
+      wCtx.moveTo(nodes[i].x,nodes[i].y); wCtx.quadraticCurveTo(mx,my,nodes[j].x,nodes[j].y); wCtx.stroke();
+    }
+  }
+  nodes.forEach(n => { wCtx.beginPath(); wCtx.arc(n.x,n.y,1.2,0,Math.PI*2); wCtx.fillStyle='rgba(180,200,230,0.18)'; wCtx.fill(); });
+}
+window.addEventListener('resize', resizeWeb);
+
+// ── Message spawner ────────────────────────────────────────
+const stage = document.getElementById('stage');
+const SIZES=['size-sm','size-sm','size-md','size-md','size-md','size-lg','size-xl'];
+const COLORS=['col-pale','col-silver','col-cold','col-ghost','col-amber','col-blood','col-bright'];
+const COLOR_WEIGHTS=[4,4,4,3,2,1,1];
+
+function pickColor() { const t=COLOR_WEIGHTS.reduce((a,b)=>a+b,0); let r=Math.random()*t; for(let i=0;i<COLORS.length;i++){r-=COLOR_WEIGHTS[i];if(r<=0)return COLORS[i];}return COLORS[0]; }
+function calcDuration(t) { return Math.min(14000,Math.max(5000,t.length*120)); }
+function randomPos() { const m=0.08; return {x:m+Math.random()*(1-m*2),y:m+Math.random()*(1-m*2)}; }
+
+let usedMessages=[];
+function pickMessage() { if(usedMessages.length>=MESSAGES.length)usedMessages=[]; const r=MESSAGES.filter(m=>!usedMessages.includes(m)); const m=r[Math.floor(Math.random()*r.length)]; usedMessages.push(m); return m; }
+
+function spawnMessage() {
+  const text=pickMessage(), pos=randomPos(), size=SIZES[Math.floor(Math.random()*SIZES.length)], color=pickColor(), duration=calcDuration(text), rot=(Math.random()-.5)*4;
+  const el=document.createElement('div'); el.className=`msg ${size} ${color}`; el.textContent=text;
+  el.style.left=(pos.x*100)+'%'; el.style.top=(pos.y*100)+'%'; el.style.transform=`rotate(${rot}deg) translateY(6px)`;
+  stage.appendChild(el);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{ el.style.transform=`rotate(${rot}deg) translateY(0)`; el.classList.add('visible'); }));
+  setTimeout(()=>{ el.classList.remove('visible'); el.classList.add('fading'); el.style.transform=`rotate(${rot}deg) translateY(-5px)`; setTimeout(()=>el.remove(),1500); },duration);
+}
+
+let usedImportant=[];
+function pickImportant() { if(usedImportant.length>=IMPORTANT_MESSAGES.length)usedImportant=[]; const r=IMPORTANT_MESSAGES.filter(m=>!usedImportant.includes(m)); const m=r[Math.floor(Math.random()*r.length)]; usedImportant.push(m); return m; }
+
+function spawnImportant() {
+  if(!IMPORTANT_MESSAGES.length) return;
+  const text=pickImportant(), duration=calcDuration(text)*1.4, yPct=(0.15+Math.random()*0.65)*100;
+  const el=document.createElement('div'); el.className='msg size-lg important'; el.textContent=text;
+  el.style.top=yPct+'%'; el.style.transform='translateX(-50%) translateY(6px)';
+  stage.appendChild(el);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{ el.style.transform='translateX(-50%) translateY(0)'; el.classList.add('visible'); }));
+  setTimeout(()=>{ el.classList.remove('visible'); el.classList.add('fading'); el.style.transform='translateX(-50%) translateY(-5px)'; setTimeout(()=>el.remove(),1500); },duration);
+}
+
+function scheduleNextImportant() { setTimeout(()=>{ spawnImportant(); scheduleNextImportant(); },8000+Math.random()*10000); }
+function scheduleNext() { setTimeout(()=>{ spawnMessage(); scheduleNext(); },800+Math.random()*2700); }
+
+// ── Audio engine ───────────────────────────────────────────
+let audioEnabled=false, shuffledIds=[], currentAudio=null, ambientAudio=null, iosUnlockedAudio=null, iosNotifAudio=null;
+function shuffle(arr) { const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a; }
+function nextFileId() { if(!shuffledIds.length)shuffledIds=shuffle(AUDIO_FILE_IDS); return shuffledIds.pop(); }
+function driveUrl(id) { return id; }
+function playNextClip() {
+  if(!audioEnabled||!AUDIO_FILE_IDS.length) return;
+  const id=nextFileId(); if(!id) return;
+  if(currentAudio){currentAudio.pause();currentAudio.src='';currentAudio=null;}
+  const audio = iosUnlockedAudio || new Audio();
+  audio.src = driveUrl(id); audio.volume=AUDIO_VOLUME; currentAudio=audio;
+  audio.play().catch(()=>{});
+  setTimeout(()=>{ if(audioEnabled)playNextClip(); },AUDIO_MIN_GAP_MS+Math.random()*(AUDIO_MAX_GAP_MS-AUDIO_MIN_GAP_MS));
+}
+
+const listenBtn=document.getElementById('listen-btn');
+listenBtn.addEventListener('click',()=>{
+  if (!iosUnlockedAudio) {
+    iosUnlockedAudio = new Audio();
+    iosUnlockedAudio.play().catch(()=>{});
+  }
+  if (!iosNotifAudio && NOTIF_SOUND_URL) {
+    iosNotifAudio = new Audio(NOTIF_SOUND_URL);
+    iosNotifAudio.volume = NOTIF_VOLUME;
+    iosNotifAudio.play().catch(()=>{});
+    iosNotifAudio.pause();
+    iosNotifAudio.currentTime = 0;
+  }
+  localStorage.setItem('cobweb_welcomed', '1');
+  const hint = document.getElementById('first-hint');
+  if (hint) hint.remove();
+  audioEnabled = !audioEnabled;
+  listenBtn.classList.toggle('audio-on', audioEnabled);
+  attuneBtn.classList.toggle('visible', audioEnabled);
+  if (!audioEnabled) closeAttune();
+  listenBtn.textContent = audioEnabled ? 'listening' : 'listen';
+  requestNotifPermission();
+  if (audioEnabled) {
+    playNextClip();
+    if (AMBIENT_URL) {
+      ambientAudio = new Audio(AMBIENT_URL);
+      ambientAudio.volume = AMBIENT_VOLUME;
+      ambientAudio.loop = true;
+      ambientAudio.addEventListener('ended', () => {
+        if (ambientAudio) { ambientAudio.currentTime = 0; ambientAudio.play().catch(()=>{}); }
+      });
+      ambientAudio.play().catch(()=>{});
+    }
+  } else {
+    if(currentAudio){currentAudio.pause();currentAudio.src='';currentAudio=null;}
+    if(ambientAudio){ambientAudio.pause();ambientAudio.src='';ambientAudio=null;}
+  }
+});
+
+// ── Notification queue ─────────────────────────────────────
+const notifBanner = document.getElementById('notif-banner');
+let notifQueue = [];
+let pendingNotifSound = null;
+
+function queueNotif(type, payload, sender) {
+  notifQueue.push({ type, payload, sender });
+  if (notifQueue.length === 1) showNextNotif();
+}
+
+function showNextNotif() {
+  if (!notifQueue.length) return;
+  const { type, payload } = notifQueue[0];
+  notifBanner.textContent = type === 'vision' ? 'a vision approaches' : 'the web calls';
+  notifBanner.style.background = 'rgba(160, 0, 0, 0.92)';
+  notifBanner.style.textShadow = '0 0 12px rgba(255,100,100,0.5)';
+  notifBanner.classList.add('active');
+  if (navigator.vibrate) navigator.vibrate([100, 50, 200]);
+  sendSystemNotif(type === 'scream' ? payload : 'a vision approaches');
+  if (iosNotifAudio || NOTIF_SOUND_URL) {
+    const notifSound = iosNotifAudio || new Audio(NOTIF_SOUND_URL);
+    notifSound.currentTime = 0;
+    notifSound.volume = NOTIF_VOLUME;
+    notifSound.play().catch(()=>{});
+    pendingNotifSound = notifSound;
+    notifSound.addEventListener('ended', () => {
+      if (pendingNotifSound) setTimeout(() => {
+        if (pendingNotifSound) { pendingNotifSound.currentTime = 0; pendingNotifSound.play().catch(()=>{}); }
+      }, 4000);
+    });
+  }
+}
+
+function clearNotif() {
+  notifQueue.shift();
+  notifBanner.classList.remove('active');
+  if (pendingNotifSound) { pendingNotifSound.pause(); pendingNotifSound = null; }
+  if (notifQueue.length > 0) setTimeout(showNextNotif, 600);
+}
+
+function handleNotifTap() {
+  if (!notifQueue.length) return;
+  const { type, payload } = notifQueue[0];
+  clearNotif();
+  if (type === 'scream') showScream(payload);
+  else if (type === 'vision') showVision(payload);
+}
+
+notifBanner.addEventListener('click', handleNotifTap);
+
+// ── Scream overlay ─────────────────────────────────────────
+const screamOverlay=document.getElementById('scream-overlay'), screamText=document.getElementById('scream-text'), screamDrain=document.getElementById('scream-drain');
+let screamActive=false, screamDrainAnim=null;
+
+function showScream(message) {
+  if(screamActive) return; screamActive=true; screamText.textContent=message;
+  countdownEl.style.visibility = 'hidden';
+  screamDrain.style.transition='none'; screamDrain.style.transform='scaleX(1)';
+  screamOverlay.classList.add('active');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{ screamDrain.style.transition=`transform ${SCREAM_DURATION_MS}ms linear`; screamDrain.style.transform='scaleX(0)'; }));
+  screamDrainAnim=setTimeout(dismissScream,SCREAM_DURATION_MS);
+}
+function dismissScream() { screamOverlay.classList.remove('active'); countdownEl.style.visibility = ''; setTimeout(()=>{screamText.textContent='';screamActive=false;},1300); }
+function handleScreamTap() { if(!screamActive) return; clearTimeout(screamDrainAnim); dismissScream(); }
+screamOverlay.addEventListener('click', handleScreamTap);
+
+// ── Scream History (server-synced, no local echoes panel) ──
+const MAX_HISTORY = 3;
+const screamHistory = [];
+
+function saveHistory() {
+  localStorage.setItem('cobweb_history', JSON.stringify(screamHistory));
+}
+
+function tsToTimeStr(ts) {
+  return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+}
+
+function syncScreamHistory(serverScreams) {
+  screamHistory.length = 0;
+  serverScreams
+    .map(s => ({ message: s.message, time: tsToTimeStr(s.ts), ts: s.ts }))
+    .sort((a, b) => (b.ts || 0) - (a.ts || 0))
+    .slice(0, MAX_HISTORY)
+    .forEach(e => screamHistory.push(e));
+  saveHistory();
+}
+
+// ── Scream poller ──────────────────────────────────────────
+let lastScreamTs = parseInt(localStorage.getItem('cobweb_last_scream_ts') || '0');
+let screamHistoryInitialized = false;
+
+function pollScream() {
+  fetch(SCRIPT_URL + '?type=scream&t=' + Date.now())
+    .then(r => r.json())
+    .then(data => {
+      if (!data.screams) return;
+      const screams = data.screams.filter(s => s.ts && s.message);
+      syncScreamHistory(screams);
+      if (!screamHistoryInitialized) {
+        screamHistoryInitialized = true;
+        if (screams.length > 0) {
+          lastScreamTs = Math.max(...screams.map(s => s.ts));
+          localStorage.setItem('cobweb_last_scream_ts', lastScreamTs);
+        }
+        return;
+      }
+      const newScreams = screams.filter(s => s.ts > lastScreamTs);
+      if (newScreams.length > 0) {
+        lastScreamTs = Math.max(...screams.map(s => s.ts));
+        localStorage.setItem('cobweb_last_scream_ts', lastScreamTs);
+        newScreams.forEach(s => queueNotif('scream', s.message));
+      }
+    })
+    .catch(() => {});
+}
+
+function startScreamPoller() {
+  pollScream();
+  setInterval(pollScream, SCREAM_POLL_MS);
+}
+
+// ── CSV parsers ────────────────────────────────────────────
+function parseCSV(text) {
+  const rows=text.trim().split('\n'), regular=[], important=[];
+  for(const row of rows){
+    const cols=row.split(/[\t,]/).map(c=>c.replace(/^"|"$/g,'').trim());
+    const type=(cols[0]||'').toLowerCase(), msg=cols[1]||''; if(!msg)continue;
+    if(type==='important')important.push(msg); else regular.push(msg);
+  }
+  return {regular,important};
+}
+function parseAudioCSV(text) { return text.trim().split('\n').map(r=>r.replace(/^"|"$/g,'').trim()).filter(id=>id.length>10); }
+
+function loadMessagesFromSheet() {
+  if(!SHEET_CSV_URL||SHEET_CSV_URL==='YOUR_GOOGLE_SHEETS_CSV_URL_HERE') return Promise.resolve();
+  return fetch(SHEET_CSV_URL+'&t='+Date.now())
+    .then(r=>{ if(!r.ok) throw new Error('messages fetch failed'); return r.text(); })
+    .then(text=>{
+      const {regular,important}=parseCSV(text);
+      if(regular.length) MESSAGES=regular;
+      if(important.length) IMPORTANT_MESSAGES=important;
+      localStorage.setItem('cobweb_messages', JSON.stringify({regular, important}));
+    })
+    .catch(()=>{
+      const cached = localStorage.getItem('cobweb_messages');
+      if(cached) {
+        const {regular, important} = JSON.parse(cached);
+        if(regular.length) MESSAGES=regular;
+        if(important.length) IMPORTANT_MESSAGES=important;
+      }
+    });
+}
+
+// ── Notifications ──────────────────────────────────────────
+function requestNotifPermission() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'granted') return;
+  if (Notification.permission === 'denied') return;
+  Notification.requestPermission();
+}
+
+function sendSystemNotif(message) {
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'granted') return;
+  new Notification('The Cobweb', { body: message, icon: '/favicon.ico', silent: false });
+}
+
+function showFirstTimeHint() {
+  if (localStorage.getItem('cobweb_welcomed')) return;
+  const el = document.createElement('div');
+  el.id = 'first-hint';
+  el.style.cssText = 'position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:20;font-family:"Uncial Antiqua",serif;font-size:12px;letter-spacing:0.2em;color:rgba(160,200,230,0.9);text-transform:uppercase;pointer-events:none;animation:hint-pulse 2.5s ease-in-out infinite;white-space:nowrap;';
+  el.textContent = '↑ open your mind';
+  document.body.appendChild(el);
+  const style = document.createElement('style');
+  style.textContent = '@keyframes hint-pulse{0%,100%{opacity:0.2;}50%{opacity:0.7;}}';
+  document.head.appendChild(style);
+}
+
+// ── Glitches ───────────────────────────────────────────────
+const GLITCH_CHARS = '█▓░▒#@$%&?!';
+
+function glitchElement(el) {
+  const original = el.textContent;
+  const chars = original.split('');
+  const numGlitches = 2 + Math.floor(Math.random() * 3);
+  for (let i = 0; i < numGlitches; i++) {
+    const pos = Math.floor(Math.random() * chars.length);
+    chars[pos] = GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)];
+  }
+  el.textContent = chars.join('');
+  setTimeout(() => { el.textContent = original; }, 200);
+}
+
+function runGlitches() {
+  const messages = document.querySelectorAll('.msg.visible');
+  if (messages.length > 0) {
+    const target = messages[Math.floor(Math.random() * messages.length)];
+    glitchElement(target);
+  }
+  setTimeout(runGlitches, 800 + Math.random() * 2000);
+}
+
+// ── Vision ─────────────────────────────────────────────────
+const VISION_POLL_MS = 4000;
+let lastVisionTs = 0;
+let visionFirstPoll = true;
+let visionDismissTimer = null;
+
+const visionOverlay = document.getElementById('vision-overlay');
+const visionImg     = document.getElementById('vision-img');
+
+function showVision(url) {
+  visionImg.src = url;
+  visionOverlay.classList.add('active');
+  visionOverlay.style.pointerEvents = 'all';
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  if (visionDismissTimer) clearTimeout(visionDismissTimer);
+  visionDismissTimer = setTimeout(dismissVision, SCREAM_DURATION_MS);
+}
+
+function dismissVision() {
+  if (visionDismissTimer) { clearTimeout(visionDismissTimer); visionDismissTimer = null; }
+  visionOverlay.classList.remove('active');
+  visionOverlay.style.pointerEvents = 'none';
+  setTimeout(() => { visionImg.src = ''; }, 400);
+}
+
+visionOverlay.addEventListener('click', dismissVision);
+
+function pollVision() {
+  fetch(SCRIPT_URL + '?type=vision&t=' + Date.now())
+    .then(r => r.json())
+    .then(data => {
+      if (!data.ts || !data.url) return;
+      if (visionFirstPoll) { lastVisionTs = data.ts; visionFirstPoll = false; return; }
+      if (data.ts > lastVisionTs) { lastVisionTs = data.ts; queueNotif('vision', data.url); }
+    })
+    .catch(() => {});
+}
+
+function startVisionPoller() {
+  pollVision();
+  setInterval(pollVision, VISION_POLL_MS);
+}
+
+// ── Countdown ──────────────────────────────────────────────
+const COUNTDOWN_POLL_MS = 10000;
+let countdownTarget = 0;
+let countdownInterval = null;
+const countdownEl = document.getElementById('countdown');
+
+function updateCountdown() {
+  if (!countdownTarget) return;
+  const now = Date.now();
+  const diff = countdownTarget - now;
+  if (diff <= 0) {
+    countdownEl.classList.remove('active');
+    countdownTarget = 0;
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+    return;
+  }
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+  document.getElementById('countdown-time').textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function setCountdown(targetTime, label) {
+  countdownTarget = targetTime;
+  if (countdownInterval) clearInterval(countdownInterval);
+  if (!targetTime || targetTime <= Date.now()) return;
+  countdownEl.classList.add('active');
+  document.getElementById('countdown-label').textContent = label || '';
+  updateCountdown();
+  countdownInterval = setInterval(updateCountdown, 1000);
+}
+
+function pollCountdown() {
+  fetch(SCRIPT_URL + '?type=countdown&t=' + Date.now())
+    .then(r => r.json())
+    .then(data => {
+      if (!data.targetTime) return;
+      if (data.targetTime !== countdownTarget) setCountdown(data.targetTime, data.label);
+    })
+    .catch(() => {});
+}
+
+function startCountdownPoller() {
+  pollCountdown();
+  setInterval(pollCountdown, COUNTDOWN_POLL_MS);
+}
+
+// ── Attune Panel ───────────────────────────────────────────
+const attuneBtn      = document.getElementById('attune-btn');
+const attunePanel    = document.getElementById('attune-panel');
+const attuneBackdrop = document.getElementById('attune-backdrop');
+
+const volAmbientSlider = document.getElementById('vol-ambient');
+const volVoicesSlider  = document.getElementById('vol-voices');
+const volSignalsSlider = document.getElementById('vol-signals');
+
+volAmbientSlider.value = AMBIENT_VOLUME;
+volVoicesSlider.value  = AUDIO_VOLUME;
+volSignalsSlider.value = NOTIF_VOLUME;
+
+volAmbientSlider.addEventListener('input', () => { AMBIENT_VOLUME = parseFloat(volAmbientSlider.value); if (ambientAudio) ambientAudio.volume = AMBIENT_VOLUME; localStorage.setItem('cobweb_vol_ambient', AMBIENT_VOLUME); });
+volVoicesSlider.addEventListener('input',  () => { AUDIO_VOLUME   = parseFloat(volVoicesSlider.value);  if (currentAudio) currentAudio.volume = AUDIO_VOLUME;   localStorage.setItem('cobweb_vol_voices',  AUDIO_VOLUME); });
+volSignalsSlider.addEventListener('input', () => { NOTIF_VOLUME   = parseFloat(volSignalsSlider.value); if (iosNotifAudio) iosNotifAudio.volume = NOTIF_VOLUME; if (pendingNotifSound) pendingNotifSound.volume = NOTIF_VOLUME; localStorage.setItem('cobweb_vol_signals', NOTIF_VOLUME); });
+
+function openAttune()  { updateAttuneName(); attunePanel.classList.add('active'); attuneBackdrop.classList.add('active'); attuneBtn.classList.add('active'); }
+function closeAttune() { attunePanel.classList.remove('active'); attuneBackdrop.classList.remove('active'); attuneBtn.classList.remove('active'); }
+function toggleAttune() { attunePanel.classList.contains('active') ? closeAttune() : openAttune(); }
+
+attuneBtn.addEventListener('click', toggleAttune);
+attuneBackdrop.addEventListener('click', closeAttune);
+
+document.getElementById('change-name-btn').addEventListener('click', () => {
+  closeAttune();
+  localStorage.removeItem('cobweb_echo_name');
+  echoNameInput.value = '';
+  echoIdentityOverlay.style.display = 'flex';
+  echoIdentityOverlay.style.opacity = '1';
+  echoIdentityOverlay.classList.remove('hidden');
+  setTimeout(() => echoNameInput.focus(), 300);
+});
+
+function updateAttuneName() {
+  const nameEl = document.getElementById('attune-echo-name');
+  if (nameEl) nameEl.textContent = getEchoName() || 'unknown';
+}
+
+// ── startApp ───────────────────────────────────────────────
+function startApp() {
+  resizeWeb();
+  runGlitches();
+  const isMobile = window.innerWidth < 480;
+  setTimeout(() => spawnMessage(), 200);
+  if (!isMobile) setTimeout(() => spawnMessage(), 900);
+  setTimeout(() => spawnMessage(), isMobile ? 1400 : 1600);
+  scheduleNext();
+  if (IMPORTANT_MESSAGES.length > 0) setTimeout(() => { spawnImportant(); scheduleNextImportant(); }, 10000);
+  startScreamPoller();
+  startVisionPoller();
+  startCountdownPoller();
+  showFirstTimeHint();
+}
+
+// ── Boot ───────────────────────────────────────────────────
+const bootFetchJobs = [loadMessagesFromSheet()];
+
+if (AUDIO_CSV_URL && AUDIO_CSV_URL !== 'YOUR_AUDIO_TAB_CSV_URL_HERE') {
+  bootFetchJobs.push(
+    fetch(AUDIO_CSV_URL)
+      .then(r => { if (!r.ok) throw new Error('audio fetch failed'); return r.text(); })
+      .then(text => { const ids = parseAudioCSV(text); if (ids.length) AUDIO_FILE_IDS = ids; })
+      .catch(() => {})
+  );
+}
+
+Promise.allSettled(bootFetchJobs).then(() => {
+  startApp();
+  setInterval(loadMessagesFromSheet, 10000);
+  const params = new URLSearchParams(window.location.search);
+  const screamMessage = params.get('scream');
+  if (screamMessage) queueNotif('scream', screamMessage);
+});
+
+// ── Echo Identity ──────────────────────────────────────────
+const echoIdentityOverlay = document.getElementById('echo-identity');
+const echoNameInput       = document.getElementById('echo-name-input');
+const echoNameBtn         = document.getElementById('echo-name-btn');
+
+function getEchoName() {
+  return localStorage.getItem('cobweb_echo_name') || null;
+}
+
+function submitEchoName() {
+  const name = echoNameInput.value.trim();
+  if (!name) return;
+  localStorage.setItem('cobweb_echo_name', name);
+  updateAttuneName();
+  echoIdentityOverlay.classList.add('hidden');
+  setTimeout(() => echoIdentityOverlay.style.display = 'none', 900);
+}
+
+echoNameBtn.addEventListener('click', submitEchoName);
+echoNameInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitEchoName(); });
+
+if (getEchoName()) {
+  echoIdentityOverlay.style.display = 'none';
+} else {
+  setTimeout(() => echoNameInput.focus(), 500);
+}
+
+// ── Cursor ─────────────────────────────────────────────────
+const cursor = document.getElementById('cursor');
+document.addEventListener('mousemove', e => { cursor.style.left = e.clientX + 'px'; cursor.style.top = e.clientY + 'px'; });
+document.addEventListener('click', e => {
+  if (e.target.closest('#listen-btn')) return;
+  if (e.target.closest('#notif-banner')) return;
+  if (e.target.closest('#scream-overlay')) return;
+  if (e.target.closest('#vision-overlay')) return;
+  if (e.target.closest('#attune-btn')) return;
+  if (e.target.closest('#attune-panel')) return;
+  if (e.target.closest('#attune-backdrop')) return;
+  if (e.target.closest('#echo-identity')) return;
+  spawnMessage();
+});
+
+// ── Service worker ─────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js');
+}
+</script>
+</body>
+</html>
