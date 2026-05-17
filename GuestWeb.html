@@ -43,7 +43,7 @@
   /* ── Listen: centred along the bottom ── */
   #listen-btn {
     position: fixed;
-    bottom: 22px;
+    bottom: calc(22px + env(safe-area-inset-bottom, 0px));
     left: 50%;
     transform: translateX(-50%);
     z-index: 10;
@@ -78,7 +78,7 @@
   /* ── Attune: bottom-left (where listen used to live) ── */
   #attune-btn {
     position: fixed;
-    bottom: 22px;
+    bottom: calc(22px + env(safe-area-inset-bottom, 0px));
     left: 24px;
     z-index: 10;
     font-family: 'Uncial Antiqua', serif;
@@ -105,6 +105,7 @@
   /* Panel anchors from bottom-left, above the attune button */
   #attune-panel {
     position: fixed;
+   max-height: 60vh;
     bottom: 70px;
     left: 16px;
     z-index: 50;
@@ -130,7 +131,7 @@
   .attune-slider::-moz-range-thumb { width: 8px; height: 8px; border-radius: 50%; background: rgba(210, 175, 95, 0.85); box-shadow: 0 0 8px rgba(200, 160, 60, 0.65); border: none; cursor: pointer; }
 
   @media (max-width: 480px) {
-    #listen-btn, #attune-btn { font-size: 11px; letter-spacing: 0.18em; padding: 10px 6px; min-width: 44px; min-height: 44px; }
+    #listen-btn, #attune-btn { font-size: 14px; letter-spacing: 0.18em; padding: 10px 6px; min-width: 44px; min-height: 44px; }
     #attune-btn { left: 14px; }
     .msg { max-width: min(260px, 72vw); }
     .msg.size-xl { font-size: 18px; }
